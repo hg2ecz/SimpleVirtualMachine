@@ -1,0 +1,11 @@
+.load 0x0100
+.entry start
+start:
+    LDI 72
+    FSR0I 0xFF20
+    STB0
+    LDI 105
+    STB0
+    LDI 10
+    STB0
+    HALT

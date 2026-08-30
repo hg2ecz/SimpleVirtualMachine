@@ -1,0 +1,8 @@
+[workspace]
+members = ["svm_asm", "svm_rt", "svm_c"]
+resolver = "2"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true

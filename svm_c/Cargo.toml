@@ -1,0 +1,23 @@
+[package]
+name = "svm-c"
+version = "0.8.6"
+edition = "2024"
+
+[dependencies]
+svm-asm = { path = "../svm_asm" }
+
+[lib]
+name = "svm_c"
+path = "src/lib.rs"
+
+[[bin]]
+name = "svm-c"
+path = "src/bin/svm-c.rs"
+
+[[bin]]
+name = "svm-c-v2"
+path = "src/bin/svm-c-v2.rs"
+
+[[bin]]
+name = "svm-c-unopt-only"
+path = "src/bin/svm-c-unopt-only.rs"

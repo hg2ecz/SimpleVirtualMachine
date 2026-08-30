@@ -1,0 +1,18 @@
+[package]
+name = "svm-rt"
+version = "0.5.5"
+edition = "2024"
+
+[dependencies]
+svm-asm = { path = "../svm_asm", default-features = false }
+minifb = "0.28"
+crossterm = "0.29"
+thiserror = "2"
+
+[dev-dependencies]
+svm-asm = { path = "../svm_asm" }
+
+
+[[bin]]
+name = "svm-rt"
+path = "src/main.rs"

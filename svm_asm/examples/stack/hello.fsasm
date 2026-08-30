@@ -1,0 +1,17 @@
+\ Character output through MMIO.
+.load 0x0000
+.entry main
+
+: emit   \ ( c -- )
+    0xFF20 C!
+;
+
+: main
+    72 emit   \ H
+    69 emit   \ E
+    76 emit   \ L
+    76 emit   \ L
+    79 emit   \ O
+    10 emit
+    HALT
+;

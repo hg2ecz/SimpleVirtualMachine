@@ -1,0 +1,16 @@
+.load 0x0100
+.entry start
+; Demonstration of the two-pointer copy core.
+start:
+    FSR0I 0x2000
+    FSR1I 0x2100
+    LDI 16
+    MOV16 W, 0x00
+copy:
+    LDB0+
+    STB1+
+    DEC 0x00
+    MOV16 0x00,W
+    CMPI 0
+    JNZ copy
+    HALT

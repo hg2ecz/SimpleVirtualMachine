@@ -1,0 +1,11 @@
+.load 0x0200
+.entry main
+
+: main
+    0x3000 0x4000
+    256 0 DO
+        SWAP C@+ ROT C!+
+    LOOP
+    2DROP
+    HALT
+;

@@ -1,0 +1,18 @@
+\ Draw "HELLO" through the common TEXT_CHAR MMIO character generator.
+.load 0x0200
+.entry main
+
+: main
+    1  0xFF0D C!         \ palette slot 1 -> blue
+    14 0xFF0F C!         \ palette slot 3 -> yellow
+    4  0xFF03 C!         \ TEXT_Y
+    3  0xFF04 C!         \ TEXT_FG = framebuffer slot 3
+    1  0xFF05 C!         \ TEXT_BG = framebuffer slot 1
+
+    7  0xFF02 C! 72 0xFF06 C!
+    8  0xFF02 C! 69 0xFF06 C!
+    9  0xFF02 C! 76 0xFF06 C!
+    10 0xFF02 C! 76 0xFF06 C!
+    11 0xFF02 C! 79 0xFF06 C!
+    HALT
+;
