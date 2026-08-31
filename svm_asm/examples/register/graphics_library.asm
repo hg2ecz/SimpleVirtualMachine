@@ -1,8 +1,8 @@
-; Assemble with -I svm_asm/lib/register
+; The register standard-library directory is searched automatically.
 .include "graphics.asm"
 .load 0x0200
 .entry start
-start:
+.proc start
     ; slot0=black, slot1=bright blue, slot2=yellow, slot3=white
     MOVI R0, 0
     MOVI R1, 9
@@ -11,14 +11,31 @@ start:
     CALL gfx_set_palette
     MOVI R0, 0
     CALL clear
+
+    ; line(10,309,10,189,1) through the shared high-level parameter block
+    MOVI R0, 10
+    ZSTORE16 GFX_X0
+    MOVI R0, 10
+    ZSTORE16 GFX_Y0
+    MOVI R0, 309
+    ZSTORE16 GFX_X1
+    MOVI R0, 189
+    ZSTORE16 GFX_Y1
+    MOVI R0, 1
+    ZSTORE16 GFX_COLOR
+    CALL line
+
+    ; fillrect(120,60,80,50,2)
+    MOVI R0, 120
+    ZSTORE16 GFX_X0
+    MOVI R0, 60
+    ZSTORE16 GFX_Y0
+    MOVI R0, 80
+    ZSTORE16 GFX_W
+    MOVI R0, 50
+    ZSTORE16 GFX_H
     MOVI R0, 2
-    CALL gfx_set_color
-    MOVI R0, 20
-    MOVI R1, 300
-    MOVI R2, 100
-    CALL hline
-    MOVI R0, 160
-    MOVI R1, 20
-    MOVI R2, 180
-    CALL vline
+    ZSTORE16 GFX_COLOR
+    CALL fillrect
     HALT
+.endproc

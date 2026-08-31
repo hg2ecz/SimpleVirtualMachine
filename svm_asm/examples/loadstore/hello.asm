@@ -1,6 +1,6 @@
 .load 0x0100
 .entry start
-start:
+.proc start
     LDI R1, 0xFF20
     LDI R0, 72
     ST8 [R1], R0
@@ -9,3 +9,4 @@ start:
     LDI R0, 10
     ST8 [R1], R0
     HALT
+.endproc

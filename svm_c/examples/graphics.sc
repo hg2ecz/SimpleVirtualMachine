@@ -1,14 +1,14 @@
 include "lib/graphics.sc";
 
 u16 main() {
-    gfx_set_palette(0, 9, 14, 15);
+    gfx_set_palette(0, 9, 12, 15);
     clear(0);
-    gfx_set_color(1);
-    line(0, 0, 319, 199);
-    line(319, 0, 0, 199);
-    gfx_set_color(2);
-    rect(20, 20, 100, 60);
-    gfx_set_color(3);
-    circle(160, 100, 50);
+
+    line(10, 309, 10, 189, 1);
+    rect(20, 20, 100, 60, 2);
+    fillrect(140, 25, 70, 45, 1);
+    circle(80, 135, 35, 3);
+    fillcircle(220, 135, 30, 2);
+
     return 0;
 }

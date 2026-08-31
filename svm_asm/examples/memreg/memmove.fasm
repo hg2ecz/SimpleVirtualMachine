@@ -1,7 +1,7 @@
 .load 0x0100
 .entry start
 ; Demonstration of the two-pointer copy core.
-start:
+.proc start
     FSR0I 0x2000
     FSR1I 0x2100
     LDI 16
@@ -14,3 +14,4 @@ copy:
     CMPI 0
     JNZ copy
     HALT
+.endproc

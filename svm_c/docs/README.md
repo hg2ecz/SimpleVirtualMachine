@@ -19,7 +19,10 @@ English/Hungarian document pairs must describe the same implemented language and
 - [`LIBRARY_REFERENCE_HU.md`](LIBRARY_REFERENCE_HU.md) - complete library index.
 - [`SVM_C_ARITHMETIC_LIBRARY_HU.md`](SVM_C_ARITHMETIC_LIBRARY_HU.md) - arithmetic library details.
 - [`CONSOLE_LIBRARY_HU.md`](CONSOLE_LIBRARY_HU.md) - console helpers.
-- [`GRAPHICS_LIBRARY_HU.md`](GRAPHICS_LIBRARY_HU.md) - 2 bpp graphics helpers.
+- [`GRAPHICS_LIBRARY_HU.md`](GRAPHICS_LIBRARY_HU.md) / [`GRAPHICS_LIBRARY_EN.md`](GRAPHICS_LIBRARY_EN.md) - 2 bpp graphics helpers.
 - [`TEXT_SCREEN_LIBRARY_HU.md`](TEXT_SCREEN_LIBRARY_HU.md) - 40x25 text-screen helpers.
 - [`FFT_EXAMPLES_HU.md`](FFT_EXAMPLES_HU.md) - FFT examples and reporting.
 - [`SMOKE_TESTS_HU.md`](SMOKE_TESTS_HU.md) - numeric smoke/regression suite.
+
+- [`STANDARD_LIBRARY_HU.md`](STANDARD_LIBRARY_HU.md) - általános C-first standard könyvtár (memória, string, bit, CRC, konverzió, ring buffer)
+- [`STANDARD_LIBRARY_EN.md`](STANDARD_LIBRARY_EN.md) - English reference for the C-first general-purpose library

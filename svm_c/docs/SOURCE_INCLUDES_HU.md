@@ -37,7 +37,7 @@ Az include rekurzív. Egy kanonikus fájl ugyanazon fordításon belül csak egy
 
 ## Kapcsolat az optimalizálással
 
-Az include csak forrásszintű láthatóságot ad. `-O1`, `-O2` és `-Os` alatt a `main()`-ből tranzitívan nem elérhető függvények még a statikus layout előtt kiesnek, ezért a nem használt könyvtári rutinok sem gépi kódot, sem statikus RAM-ot nem foglalnak. `-O0` és `svm-c-unopt-only` szándékosan minden beolvasott függvényt megtart.
+Az include csak forrásszintű láthatóságot ad. `-O1`, `-O2` és `-Os` alatt a `main()`-ből tranzitívan nem elérhető függvények már a statikus layout előtt kiesnek, ezért sem generált assemblyt, sem compiler-owned statikus RAM-ot nem foglalnak. `-O0` és `svm-c-unopt-only` minden beolvasott függvényt eljuttat a C-szintű kódgenerálásig és `--emit asm` esetén meg is mutatja őket; bináris készítéskor azonban a közös assembler procedure-GC minden optimalizációs szinten eltávolítja az el nem érhető `.proc` blokkokat, ezért azok gépi kódhelyet nem foglalnak.
 
 ## Tudatos korlátozások
 

@@ -1,0 +1,30 @@
+.load 0
+.include "graphics.asm"
+.entry start
+.proc start
+    LDAI 0
+    CALL clear
+    LDAI 10
+    STA16 GFX_X0
+    LDAI 10
+    STA16 GFX_Y0
+    LDAI 309
+    STA16 GFX_X1
+    LDAI 189
+    STA16 GFX_Y1
+    LDAI 1
+    STA16 GFX_COLOR
+    CALL line
+    LDAI 120
+    STA16 GFX_X0
+    LDAI 60
+    STA16 GFX_Y0
+    LDAI 80
+    STA16 GFX_W
+    LDAI 50
+    STA16 GFX_H
+    LDAI 2
+    STA16 GFX_COLOR
+    CALL fillrect
+    HALT
+.endproc

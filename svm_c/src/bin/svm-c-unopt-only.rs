@@ -1,5 +1,6 @@
 use std::{env, fs, path::PathBuf};
 
+use svm_asm::procedure_gc::{ProcedureSyntax, eliminate_unused_procedures};
 use svm_asm::source_include::{IncludeStyle, expand_source_file};
 
 use svm_c::common::model::Target;
@@ -105,6 +106,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
         return Ok(());
     }
+
+    let proc_syntax = match target {
+        Target::Stack => ProcedureSyntax::StackLabels,
+        _ => ProcedureSyntax::Labels,
+    };
+    let assembly = eliminate_unused_procedures(&assembly, proc_syntax)
+        .map_err(|e| format!("assembly procedure analysis error: {e}"))?;
 
     match target {
         Target::Register => {

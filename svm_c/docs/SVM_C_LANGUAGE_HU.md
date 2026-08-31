@@ -4,7 +4,7 @@ Az SVM-C tudatosan kicsi, C-szerű freestanding rendszerprogramozási nyelv a ki
 
 A jelenlegi nyelv támogatja a `bool`, `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`, `int`, `long`, `void` típusokat, statikus változókat és fix tömböket, `[]` indexelést, függvényeket, `if/else`, `while`, `for`, `do...while`, `break`, `continue`, rövidzáras `&&/||` operátorokat, statement-szintű `++/--` és compound assignment műveleteket, korlátozott `sizeof`-ot és `puts("...")` VT100 kiírást.
 
-A lokális változók és paraméterek nem stack frame-ben, hanem statikusan kiosztott memóriában vannak. Ez kis compiler/backend költséget ad, de nincs rekurzió és reentrancia.
+A lokális változók és paraméterek nem stack frame-ben, hanem statikusan kiosztott memóriában vannak. A hívó a callee paraméterhelyeire írja az argumentumokat; ezért a korábbi négyelemű paraméterkorlát megszűnt. Ez kis compiler/backend költséget ad, de nincs rekurzió és reentrancia.
 
 A teljes, implementációval szinkronban tartott referencia: **`C_REFERENCE_HU.md`**; a tudatosan kihagyott ANSI C elemek és a nyelvi határok ebben a referenciában szerepelnek.
 

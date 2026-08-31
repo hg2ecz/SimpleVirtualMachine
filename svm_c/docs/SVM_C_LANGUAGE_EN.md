@@ -4,7 +4,7 @@ SVM-C is a deliberately small freestanding C-like systems language for all nine 
 
 The current language includes `bool`, `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`, `int`, `long`, `void`, static variables and fixed arrays, `[]` indexing, functions, `if/else`, `while`, `for`, `do...while`, `break`, `continue`, short-circuit `&&/||`, statement-level `++/--` and compound assignment, restricted `sizeof`, and VT100-oriented `puts("...")`.
 
-Locals and parameters use static storage rather than stack frames. This keeps the compiler/backends small but deliberately excludes recursion and reentrancy.
+Locals and parameters use static storage rather than stack frames. Callers populate the callee parameter slots before `CALL`, so the former four-argument limit is gone. This keeps the compiler/backends small but deliberately excludes recursion and reentrancy.
 
 The implementation-synchronized reference is **`C_REFERENCE_EN.md`**; the deliberate subset boundaries are documented in that reference.
 

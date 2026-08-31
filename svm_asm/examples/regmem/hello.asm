@@ -1,6 +1,6 @@
 .load 0x0100
 .entry start
-start:
+.proc start
     MOVI R1, 0xFF20
     MOVI R0, 72
     STORE8 [R1], R0
@@ -9,3 +9,4 @@ start:
     MOVI R0, 10
     STORE8 [R1], R0
     HALT
+.endproc

@@ -36,9 +36,6 @@ pub(crate) fn validate(p: &Program) -> Result<(), String> {
         if !funcs.insert(f.name.clone()) {
             return Err(format!("duplicate function '{}'", f.name));
         }
-        if f.params.len() > 4 {
-            return Err(format!("function '{}' has more than 4 parameters", f.name));
-        }
         let mut local = HashSet::new();
         for a in &f.params {
             if a.ty.is_wide() {

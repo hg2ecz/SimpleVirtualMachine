@@ -60,7 +60,7 @@ u16 main() {
 
 A global initializer must be a direct numeric constant. A local initializer may be a general expression.
 
-Local variables and parameters live in **statically allocated memory**, not in stack frames. Consequently the current ABI is neither recursive nor reentrant.
+Local variables and parameters live in **statically allocated memory**, not in stack frames. Callers store arguments into the callee parameter slots before `CALL`; the Stack backend uses its natural stack passing convention. There is therefore no separate four-argument limit. The current ABI remains neither recursive nor reentrant.
 
 By default, the static allocator first uses `0x0000..0x00EF`, then `0xE000..0xFAFF`; `0x00F0..0xDFFF` is not used for ordinary static-object allocation. Two targets reserve additional low memory: MemReg uses `0x000E..0x000F` as compiler-owned hot scratch, while Memory-to-Memory starts user/static allocation at `0x0020` because `0x0000..0x001F` is compiler-owned scratch. The C program image may grow in `0x0100..0xDFFF`; `0xE000..0xFAFF` is the static-overflow area, `0xFB00..0xFEFF` is the runtime stack convention, and `0xFF00..0xFFFF` is MMIO.
 
@@ -240,7 +240,7 @@ void hello() {
 
 Rules:
 
-- at most 4 parameters;
+- scalar parameter count has no artificial four-argument limit; the practical bound is static-data capacity and transient runtime-stack capacity;
 - a parameter cannot be `void` or an array;
 - there are no separate prototypes/declarations;
 - a `void` result cannot be used as a value;
@@ -354,7 +354,7 @@ u16 main() {
 
 The `svm-c` optimization levels `-O0`, `-O1`, `-O2`, and `-Os` change generated code, not source-language syntax. The separate `svm-c-unopt-only` binary uses the same frontend and backends but runs no AST optimizer pass at all and accepts no `-O` option. Internal optimizer AST forms such as `Inc1/Dec1/Shl1/Shr1` are **not** source-language operators.
 
-With `-O1`, `-O2`, and `-Os`, the compiler transitively walks the direct call graph rooted at `main()` and removes unreachable functions **before static-memory layout**. Consequently unused routines from an included library occupy neither code space nor static RAM. `-O0` and `svm-c-unopt-only` keep every parsed function for educational comparability. Function pointers are not supported, so the direct call graph is complete.
+With `-O1`, `-O2`, and `-Os`, the compiler transitively walks the direct call graph rooted at `main()` and removes unreachable functions **before static-memory layout**. Those functions therefore consume neither generated assembly nor compiler-owned static RAM. `-O0` and `svm-c-unopt-only` keep every parsed function through C-level code generation for educational comparability, and `--emit asm` preserves the complete `.proc` set. Binary generation, however, runs the assembler procedure-GC at every optimization level, so unreachable emitted procedures still occupy no machine-code space. Function pointers are not supported, so the C-level direct call graph is complete.
 
 ## Source includes
 
@@ -381,3 +381,9 @@ The `belt` / `belt16` target uses an eight-element (`b0..b7`) implicit result be
 ### TTA16 target
 
 The `tta` / `tta16` target emits transport-triggered code. ALU operations are explicit transports: the first operand goes to `ALU.X`, the second to the corresponding `ALU.*` trigger port, and the result is read from `ALU.OUT`. C-language semantics do not change; there is no hardware floating point.
+
+## C-first standard library modules
+
+Portable general-purpose algorithms are maintained as C source under `svm_c/lib/`. The `stdlib.sc` umbrella includes memory, string, bit manipulation, CRC/checksum, conversion, ring-buffer, integer/Q15/trigonometry, software-random and console helpers. See `STANDARD_LIBRARY_EN.md` for the API overview.
+
+Address-based APIs take a `u16` address; use `&object` to obtain the address of an array or object. The compiler built-in `puts()` still accepts only string literals; use `putstr(address)` from `console.sc` for run-time generated zero-terminated buffers.

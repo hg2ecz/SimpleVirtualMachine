@@ -4,7 +4,7 @@
 .load 0x0100
 .entry start
 
-start:
+.proc start
     LDI 0xFFFF
     LDI 0x0001
     ADD b1,b0       ; b0=0x0000, C=1
@@ -18,3 +18,4 @@ start:
     POP             ; b0=low result
     ST16A 0x6000,b0
     HALT
+.endproc

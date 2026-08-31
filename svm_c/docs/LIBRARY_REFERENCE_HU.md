@@ -46,3 +46,19 @@ A `svm_c/lib/` forráskönyvtárak include-olhatók. `-O1/-O2/-Os` mellett csak 
 ## FFT riport
 
 `fft_report.sc`: az FFT példákhoz használt fixpontos numerikus riport és 32 bites számlálókiírás. Nem általános printf-helyettesítő.
+
+## Általános standard könyvtár
+
+A hordozható algoritmusok elsődleges implementációja C-ben található. Az új modulok:
+
+- `memory.sc` - `mem_zero`, `memset`, `memcpy`, `memmove`, `memcmp`;
+- `string.sc` - nullával lezárt byte-string rutinok;
+- `bits.sc` - rotate/popcount/parity/CLZ/CTZ/bitreverse/byte-swap;
+- `crc.sc` - checksum, CRC-8/ATM, CRC-16/CCITT-FALSE;
+- `convert.sc` - decimális/hex parsing és bufferes számkonverzió;
+- `buffer.sc` - statikus byte ring buffer;
+- `stdlib.sc` - az általános modulok umbrella include-ja.
+
+Részletes leírás: [`STANDARD_LIBRARY_HU.md`](STANDARD_LIBRARY_HU.md).
+
+A `console.sc` ezen felül `putstr`, `puti16` és `putbin16` rutinokat is ad. A `putstr` különösen fontos, mert a compiler built-in `puts()` csak string literált fogad.

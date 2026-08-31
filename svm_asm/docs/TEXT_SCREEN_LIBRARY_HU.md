@@ -20,3 +20,7 @@ Közös entry pontok:
 A konkrét operandus-ABI az adott `textscreen.asm` fejlécében található. Az assembly `text_putc` szándékosan csak az aktuális cellába rajzol; automatikus kurzor-kezelést a hívó vagy saját wrapper végezhet. A C könyvtár ennél magasabb szintű kurzorkezelést is ad.
 
 MMIO: `TEXT_X=0xFF02`, `TEXT_Y=0xFF03`, `TEXT_FG=0xFF04`, `TEXT_BG=0xFF05`, `TEXT_CHAR=0xFF06`.
+
+## Procedure-GC
+
+A ténylegesen implementált assembly rutinok `.proc/.endproc` blokkokban vannak. Egy teljes standard könyvtár include-olása nem kényszeríti a nem használt rutinok gépi kódba építését: az assembler csak az `.entry`, `.keep` vagy élő szimbolikus hivatkozás alapján elérhető eljárásokat tartja meg.

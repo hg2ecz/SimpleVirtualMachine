@@ -2,11 +2,11 @@
 \ 320x200, packed 2bpp: 16000 bytes.
 .load 0x0000
 .entry main
-: main
+.proc main
     0x0000
     16000 0 DO
         I SWAP VC!+
     LOOP
     DROP
     HALT
-;
+.endproc

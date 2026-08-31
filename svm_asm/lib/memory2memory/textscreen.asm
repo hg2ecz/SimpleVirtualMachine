@@ -1,25 +1,35 @@
 ; 40x25 framebuffer text-screen helpers.
 ; text_goto: x byte at [A0], y byte at [A1]. text_set_colors: fg [A0], bg [A1].
 ; text_putc: character byte at [A0]. Scratch: 0x00F2..0x00F3.
-text_goto:
+.proc text_goto
     MOV8 [0xFF02], [A0]
     MOV8 [0xFF03], [A1]
     RET
-text_set_colors:
+.endproc
+
+.proc text_set_colors
     MOV8 [0xFF04], [A0]
     MOV8 [0xFF05], [A1]
     RET
-text_home:
+.endproc
+
+.proc text_home
     MOV8 [0xFF02], 0
     MOV8 [0xFF03], 0
     RET
-text_cr:
+.endproc
+
+.proc text_cr
     MOV8 [0xFF02], 0
     RET
-text_putc:
+.endproc
+
+.proc text_putc
     MOV8 [0xFF06], [A0]
     RET
-text_clear:
+.endproc
+
+.proc text_clear
     MOV8 [0x00F2], 0
 text_clear_y:
     MOV8 [0xFF03], [0x00F2]
@@ -34,3 +44,4 @@ text_clear_x:
     CMP8 [0x00F2], 25
     JNZ text_clear_y
     JMP text_home
+.endproc

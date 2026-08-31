@@ -60,7 +60,7 @@ u16 main() {
 
 A globális inicializáló csak közvetlen numerikus konstans lehet. A lokális inicializáló általános kifejezés lehet.
 
-A lokális változók és paraméterek **statikusan lefoglalt memóriában** élnek, nem stack frame-ben. Emiatt a jelenlegi ABI nem rekurzív és nem reentráns.
+A lokális változók és paraméterek **statikusan lefoglalt memóriában** élnek, nem stack frame-ben. A hívó a callee paraméterhelyeire írja az argumentumokat a `CALL` előtt; a Stack backend természetes vermes átadást használ. Emiatt nincs külön négyelemű paraméterkorlát. A jelenlegi ABI továbbra sem rekurzív és nem reentráns.
 
 A statikus allocator alapértelmezésben először `0x0000..0x00EF`, majd `0xE000..0xFAFF` területet használ; `0x00F0..0xDFFF` nem kerül normál statikus objektumok kiosztására. Két célarchitektúrának van további foglalása: MemReg esetén `0x000E..0x000F` compiler-owned hot scratch, Memory-to-Memory esetén pedig a felhasználói/statikus kiosztás `0x0020`-tól indul, mert `0x0000..0x001F` compiler-owned scratch. A C programkép `0x0100..0xDFFF` között nőhet; `0xE000..0xFAFF` a statikus overflow-terület, `0xFB00..0xFEFF` a runtime stack konvenció, `0xFF00..0xFFFF` MMIO.
 
@@ -240,7 +240,7 @@ void hello() {
 
 Szabályok:
 
-- legfeljebb 4 paraméter;
+- a skalár paraméterek száma nincs mesterségesen négyre korlátozva; a gyakorlati korlát a statikus adatterület és a híváskori runtime stack kapacitása;
 - paraméter nem lehet `void` és nem lehet tömb;
 - külön prototype/declaration nincs;
 - `void` eredmény nem használható értékként;
@@ -356,7 +356,7 @@ A `svm-c` `-O0`, `-O1`, `-O2`, `-Os` szintjei a generált kódot módosítják, 
 
 
 
-`-O1`, `-O2` és `-Os` esetén a fordító a `main()`-ből induló közvetlen hívási gráfot tranzitívan bejárja, és a nem elérhető függvényeket még a statikus memória-kiosztás előtt eltávolítja. Emiatt egy `include`-olt könyvtár nem használt rutinjai sem kód-, sem statikus RAM-helyet nem foglalnak. `-O0` és `svm-c-unopt-only` minden beolvasott függvényt megtart az oktatási összehasonlíthatóság miatt. A nyelv jelenleg nem támogat függvénypointert, ezért a direkt hívási gráf teljes.
+`-O1`, `-O2` és `-Os` esetén a fordító a `main()`-ből induló közvetlen hívási gráfot tranzitívan bejárja, és a nem elérhető függvényeket még a statikus memória-kiosztás előtt eltávolítja. Emiatt ezek sem generált assemblyt, sem compiler-owned statikus RAM-helyet nem foglalnak. `-O0` és `svm-c-unopt-only` minden beolvasott függvényt eljuttat a C-szintű kódgenerálásig az oktatási összehasonlíthatóság miatt, és `--emit asm` esetén a teljes `.proc` készlet megmarad. Bináris kimenetnél viszont minden optimalizációs szinten lefut az assembler procedure-GC, ezért az el nem érhető generált eljárások gépi kódhelyet ekkor sem foglalnak. A nyelv jelenleg nem támogat függvénypointert, ezért a C-szintű direkt hívási gráf teljes.
 
 ## Forrás include
 
@@ -384,3 +384,9 @@ A `belt` / `belt16` target nyolc elemű (`b0..b7`) implicit eredményszalagot ha
 ### TTA16 target
 
 A `tta` / `tta16` target transport-triggered kódot generál. Az ALU-műveletek explicit adatmozgatásokból állnak: az első operandus `ALU.X`-re kerül, a második a megfelelő `ALU.*` triggerportra, majd az eredmény `ALU.OUT`-ból olvasható ki. A C nyelv szemantikája nem változik; hardveres floating point nincs.
+
+## C-first standard library modulok
+
+Az általános hordozható algoritmusok a `svm_c/lib/` alatt C forrásként találhatók. A `stdlib.sc` umbrella include a memória-, string-, bit-, CRC/checksum-, konverziós, ring-buffer-, integer/Q15/trig-, random- és konzolsegédeket gyűjti össze. Részletes API: `STANDARD_LIBRARY_HU.md`.
+
+A cím-alapú API-k `u16` címet fogadnak; tömb vagy objektum címe `&objektum` alakban képezhető. A compiler built-in `puts()` továbbra is csak string literált fogad; dinamikus memóriastringhez a `console.sc` `putstr(address)` rutinja használható.

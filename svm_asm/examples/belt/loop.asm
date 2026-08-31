@@ -3,7 +3,7 @@
 .load 0x0100
 .entry start
 
-start:
+.proc start
     LDI 10
     ST16A 0x6000,b0
 
@@ -15,3 +15,4 @@ loop:
     JNZ loop
 
     HALT
+.endproc

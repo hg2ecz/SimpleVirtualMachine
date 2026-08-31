@@ -4,12 +4,15 @@
 .load 0x0100
 .entry start
 
-start:
+.proc start
     LDI 7
     CALL square
     ST16A 0x6000,b0
     HALT
 
-square:
+.endproc
+
+.proc square
     MUL b0,b0
     RET
+.endproc

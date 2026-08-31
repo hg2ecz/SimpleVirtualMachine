@@ -92,7 +92,7 @@ pub fn emit(p: &Program, l: &Layout, opt: OptLevel) -> Result<String, String> {
     e.line(".load 0x0100");
     e.line(".entry __start");
     e.blank();
-    e.line("__start:");
+    e.line(".proc __start");
     e.comment("program initialization");
     for g in &p.globals {
         if let Some(Expr::Num(v)) = &g.init {
@@ -109,6 +109,7 @@ pub fn emit(p: &Program, l: &Layout, opt: OptLevel) -> Result<String, String> {
         e.line("DROP    \\ discard main return value")
     }
     e.line("HALT");
+    e.line(".endproc");
     for f in &p.functions {
         e.function(f)?
     }
@@ -150,7 +151,7 @@ impl<'a> E<'a> {
         self.loops.clear();
         self.blank();
         self.comment(&format!("function {}", f.name));
-        self.line(&format!("{}:", f.name));
+        self.line(&format!(".proc {}", f.name));
         for a in f.params.iter().rev() {
             let v = self.var(&a.name)?;
             self.comment(&format!("parameter {} -> 0x{:04X}", a.name, v.addr));
@@ -162,6 +163,7 @@ impl<'a> E<'a> {
             self.line("0")
         }
         self.line("RET");
+        self.line(".endproc");
         Ok(())
     }
     fn load(&mut self, v: &VarInfo) {

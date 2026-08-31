@@ -15,3 +15,5 @@ Examples:
 Assemble with:
 
     svm-asm tta svm_asm/examples/tta/basic.asm basic.svt
+All standalone entry routines and callable helpers in these examples use `.proc` / `.endproc`, so the examples exercise assembler procedure-GC as well as the target ISA.
+

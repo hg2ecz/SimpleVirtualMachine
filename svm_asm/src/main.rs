@@ -1,6 +1,8 @@
 use std::{env, path::PathBuf};
 
+use svm_asm::procedure_gc::{ProcedureSyntax, eliminate_unused_procedures};
 use svm_asm::source_include::{IncludeStyle, expand_source_file};
+use svm_asm::source_preprocess::expand_equ;
 
 fn usage() -> &'static str {
     "usage: svm-asm [-I dir|-Idir] <register|stack|accumulator|memreg|loadstore|regmem|memory2memory|belt|tta> input [output]"
@@ -31,9 +33,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let target = positional[0].clone();
+    let canonical_target = match target.as_str() {
+        "register" | "reg" => "register",
+        "stack" => "stack",
+        "accumulator" | "acc" => "accumulator",
+        "memreg" | "file" | "pic" => "memreg",
+        "loadstore" | "risc" | "ls" => "loadstore",
+        "regmem" | "register-memory" | "rm" => "regmem",
+        "memory2memory" | "memory-to-memory" | "m2m" | "cisc" => "memory2memory",
+        "belt" | "belt16" => "belt",
+        "tta" | "tta16" | "transport" => "tta",
+        _ => return Err(format!("unknown target '{target}'").into()),
+    };
+    let builtin_lib = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("lib")
+        .join(canonical_target);
+    if builtin_lib.is_dir() {
+        include_dirs.push(builtin_lib);
+    }
     let input = PathBuf::from(&positional[1]);
     let output = positional.get(2).map(PathBuf::from);
     let source = expand_source_file(&input, &include_dirs, IncludeStyle::Assembly)?;
+    let source = expand_equ(&source)?;
+    let proc_syntax = if canonical_target == "stack" {
+        ProcedureSyntax::StackLabels
+    } else {
+        ProcedureSyntax::Labels
+    };
+    let source = eliminate_unused_procedures(&source, proc_syntax)?;
 
     match target.as_str() {
         "register" | "reg" => {

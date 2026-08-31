@@ -22,12 +22,12 @@ cargo run --release --manifest-path svm_c/Cargo.toml -- \
 
 ## Optimization levels
 
-- `-O0`: no AST optimization; all parsed functions are retained.
+- `-O0`: no optional AST optimization; all parsed functions reach code generation, while the final assembler procedure-GC still removes unreachable emitted procedures from binary output.
 - `-O1`: safe constant/algebraic simplification, strength reduction, and unreachable-function elimination.
 - `-O2`: `-O1` plus local constant/copy propagation and safe dead-store elimination.
 - `-Os`: size-oriented variant using the safe `-O2` transformations.
 
-At `-O1`, `-O2`, and `-Os`, only functions transitively reachable from `main()` are kept. This happens before static memory layout, so unused included library functions consume neither machine code nor static RAM. `svm-c-unopt-only` intentionally keeps every parsed function and has no optimizer dependency.
+At `-O1`, `-O2`, and `-Os`, the C optimizer removes functions transitively unreachable from `main()` before static-memory layout, so they consume neither compiler-owned static RAM nor generated assembly. Independently of optimization level, final binary generation also runs the assembler procedure-GC; therefore `-O0` and `svm-c-unopt-only` may emit all parsed functions with `--emit asm`, but unreachable `.proc` blocks are still omitted from the final machine-code binary. `svm-c-unopt-only` remains free of the optional optimizer dependency.
 
 ## Language and numeric support
 
@@ -50,3 +50,7 @@ Reusable SVM-C source libraries are under `svm_c/lib/`; `console.sc` adds newlin
 Graphics helper library: [`docs/GRAPHICS_LIBRARY_HU.md`](docs/GRAPHICS_LIBRARY_HU.md).
 
 Character-screen helpers for the 40x25 framebuffer text layer are in `svm_c/lib/textscreen.sc`; see `svm_c/docs/TEXT_SCREEN_LIBRARY_HU.md`.
+
+## C-first portable library
+
+Portable algorithms are maintained primarily under `svm_c/lib/` as include-able SVM-C source. `stdlib.sc` collects the common memory, string, bit, CRC, conversion, ring-buffer, arithmetic/random and console helpers. Hand-written assembly is kept for low-level target-specific helpers and demonstrations rather than duplicating each portable algorithm nine times. See `docs/STANDARD_LIBRARY_HU.md` / `STANDARD_LIBRARY_EN.md`.

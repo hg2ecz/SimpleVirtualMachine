@@ -5,6 +5,11 @@
 
 This document is the programming manual for the current cost-optimized **SVM Register CPU ISA v2 / executable v5**. Its purpose is not merely to list opcodes, but to explain how to program the machine efficiently.
 
+## Procedure blocks and unused-code removal
+
+Public/callable routines should be written as `.proc NAME` ... `.endproc` blocks. `.entry NAME` makes the program entry procedure a reachability root; `.keep NAME` keeps hardware callbacks or standalone library-fragment procedures explicitly. After `.include` and `.equ` expansion, the assembler removes `.proc` blocks that are not reachable from these roots or from symbolic references in live code. Ordinary labels inside a procedure remain local control-flow labels and do not define separate collectible procedures.
+
+
 ## 1. Programmer's model
 
 The CPU is a 16-bit, little-endian machine with a 64 KiB address space.
@@ -25,16 +30,20 @@ Minimal program:
 ```asm
 .load 0x0200
 .entry start
-
-start:
+.proc start
     MOVI R0, 1
     HALT
+.endproc
 ```
 
 ### Directives
 
 - `.load address` – program load address
-- `.entry address_or_label` – entry point
+- `.entry procedure` – entry procedure and procedure-GC root
+- `.proc name` / `.endproc` – collectible procedure block
+- `.keep name` – explicitly retain a procedure
+- `.include "file"` – include source library
+- `.equ name, value` – symbolic constant
 
 ### Comments
 
@@ -293,8 +302,7 @@ For post-increment loads, the destination register and address register must be 
 ```asm
 .load 0x0200
 .entry start
-
-start:
+.proc start
     MOVI R0, 0x3000
     MOVI R1, 0x4000
     MOVI R2, 256
@@ -304,6 +312,7 @@ copy:
     DEC R2
     JNZ copy
     HALT
+.endproc
 ```
 
 This is the recommended form for linear buffers, strings, and framebuffer operations.
@@ -400,3 +409,14 @@ The shared machine provides a 32-bit virtual clock, one 16-bit timer, and timer/
 ## Register ISA v3 code-density change
 
 The `B0..BF` one-byte compact family encodes `AND` for `R0..R3`; `XOR` remains a fully supported general two-register instruction. The hardware `SUBI` immediate family is retained because `ADDI -imm16` preserves the numeric result but does not preserve the observable carry/no-borrow flag semantics in every case. Reallocating only the compact logical slot still gives the desired masking code-density benefit.
+
+## Graphics library
+
+`graphics.asm` exports the fast `gfx_set_color`, `gfx_set_palette`, `putpixel`, `clear`, `hline`, and `vline` primitives plus the higher-level `line`, `rect`, `fillrect`, `circle`, and `fillcircle` procedures. ABI: R0=color; palette: R0..R3; putpixel: R0=x,R1=y; clear: R0=color; hline: R0=x0,R1=x1,R2=y; vline: R0=x,R1=y0,R2=y1. Unused procedures are removed by procedure-GC.
+
+Shapes with five or more logical parameters use the same 16-bit graphics parameter block on every ISA: `GFX_X0=0x00C0`, `GFX_Y0=0x00C2`, `GFX_X1=0x00C4`, `GFX_Y1=0x00C6`, `GFX_W=0x00C8`, `GFX_H=0x00CA`, `GFX_R=0x00CC`, `GFX_COLOR=0x00CE`. `0x00B0..0x00BE` is internal virtual-register scratch on some targets; `0x00D0..0x00FA` is additional graphics scratch/current-colour storage. Therefore `graphics.asm` reserves the full `0x00B0..0x00FA` range. `line` reads `(x0,y0,x1,y1,color)`, `rect/fillrect` read `(x,y,w,h,color)`, and `circle/fillcircle` read `(cx,cy,r,color)`. Procedure-GC removes unused shape procedures and dependencies.
+
+
+## Typed arithmetic reference include
+
+The Register standard library also contains `typed_arith.asm` and `typed_convert.asm` as an educational typed arithmetic/conversion reference. See the common `TYPED_ARITHMETIC_LIBRARY_HU.md` / `TYPED_ARITHMETIC_LIBRARY_EN.md` documentation. The portable full IEEE soft-float implementation remains in SVM-C.

@@ -754,6 +754,37 @@ mod semantic_review_tests {
                 .contains("unknown function")
         );
     }
+
+    #[test]
+    fn supports_more_than_four_scalar_parameters_on_all_targets() {
+        let src = "u16 f(u16 a,u16 b,u16 c,u16 d,u16 e,u16 f,u16 g){ return a+b+c+d+e+f+g; } u16 main(){ return f(1,2,3,4,5,6,7); }";
+        for target in [
+            Target::Register,
+            Target::Stack,
+            Target::Accumulator,
+            Target::MemReg,
+            Target::LoadStore,
+            Target::RegMem,
+            Target::Memory2Memory,
+            Target::Belt,
+            Target::Tta,
+        ] {
+            assert!(
+                compile_source(src, target, OptLevel::O0).is_ok(),
+                "target {target:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn register_argument_staging_uses_stack_before_callee_slots() {
+        let src = "u16 id(u16 x){return x;} u16 f(u16 a,u16 b,u16 c,u16 d,u16 e){return a+b+c+d+e;} u16 main(){return f(1,id(2),3,4,5);}";
+        let asm = compile_source(src, Target::Register, OptLevel::O0).unwrap();
+        let call = asm.find("CALL f").expect("CALL f");
+        let prefix = &asm[..call];
+        assert!(prefix.matches("PUSH R0").count() >= 5);
+        assert!(prefix.matches("POP R0").count() >= 5);
+    }
 }
 
 #[cfg(test)]

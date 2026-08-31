@@ -29,7 +29,7 @@ For build notes, see [`docs/BUILD_HU.md`](docs/BUILD_HU.md).
 
 ## Assembler
 
-`svm_asm` contains the assembler, architecture-specific assembly manuals, instruction references, and handwritten assembly examples.
+`svm_asm` contains the assembler, architecture-specific assembly manuals, instruction references, handwritten assembly examples, target-specific include libraries, and a common procedure-GC pass. Reusable routines use `.proc/.endproc`; complete libraries may be included while unreachable procedures are omitted from the final binary.
 
 See [`svm_asm/README.md`](svm_asm/README.md) and [`svm_asm/docs/README.md`](svm_asm/docs/README.md).
 
@@ -37,7 +37,7 @@ See [`svm_asm/README.md`](svm_asm/README.md) and [`svm_asm/docs/README.md`](svm_
 
 `svm_c` contains a shared frontend and nine ISA backends. The main compiler supports `-O0`, `-O1`, `-O2`, and `-Os`; `svm-c-unopt-only` intentionally omits the optimizer for educational/reference comparisons.
 
-At `-O1`, `-O2`, and `-Os`, functions that are not transitively reachable from `main()` are removed before static memory layout, so unused included library routines consume neither code space nor static RAM. `-O0` and `svm-c-unopt-only` intentionally retain all parsed functions.
+At `-O1`, `-O2`, and `-Os`, functions that are not transitively reachable from `main()` are removed before static memory layout, so they consume neither generated assembly nor compiler-owned static RAM. At `-O0` and in `svm-c-unopt-only`, all parsed functions still reach C-level code generation, but final binary generation always runs assembler procedure-GC, so unreachable emitted `.proc` blocks do not consume machine-code space. `--emit asm` preserves those blocks for inspection.
 
 See [`svm_c/README.md`](svm_c/README.md) and [`svm_c/docs/README.md`](svm_c/docs/README.md).
 

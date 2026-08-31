@@ -1,30 +1,40 @@
 ; 40x25 framebuffer text-screen helpers. ABI: R0=x/fg/char, R1=y/bg.
-text_goto:
+.proc text_goto
     LDI R2, 0xFF02
     STORE8 [R2], R0
     LDI R2, 0xFF03
     STORE8 [R2], R1
     RET
-text_set_colors:
+.endproc
+
+.proc text_set_colors
     LDI R2, 0xFF04
     STORE8 [R2], R0
     LDI R2, 0xFF05
     STORE8 [R2], R1
     RET
-text_home:
+.endproc
+
+.proc text_home
     LDI R0, 0
     LDI R1, 0
     JMP text_goto
-text_cr:
+.endproc
+
+.proc text_cr
     LDI R2, 0xFF02
     LDI R0, 0
     STORE8 [R2], R0
     RET
-text_putc:
+.endproc
+
+.proc text_putc
     LDI R2, 0xFF06
     STORE8 [R2], R0
     RET
-text_clear:
+.endproc
+
+.proc text_clear
     LDI R0, 0
 text_clear_y:
     LDI R2, 0xFF03
@@ -43,3 +53,4 @@ text_clear_x:
     CMPI R0, 25
     JNZ text_clear_y
     JMP text_home
+.endproc

@@ -2,7 +2,7 @@
 .load 0x0200
 .entry main
 
-: main
+.proc main
     1  0xFF0D C!         \ palette slot 1 -> blue
     14 0xFF0F C!         \ palette slot 3 -> yellow
     4  0xFF03 C!         \ TEXT_Y
@@ -15,4 +15,4 @@
     10 0xFF02 C! 76 0xFF06 C!
     11 0xFF02 C! 79 0xFF06 C!
     HALT
-;
+.endproc

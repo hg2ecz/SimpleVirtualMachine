@@ -1,16 +1,20 @@
 ; TTA16 console helpers. Console byte MMIO = 0xFF20.
 ; ABI: putc R0=char; puts R0=pointer to NUL-terminated RAM string.
 ; Clobbers R1 and ALU/MEM ports; puts advances R0.
-putc:
+.proc putc
     MOV 0xFF20, MEM.ADDR
     MOV R0, MEM.W8
     RET
-newline:
+.endproc
+
+.proc newline
     MOV 0xFF20, MEM.ADDR
     MOV 13, MEM.W8
     MOV 10, MEM.W8
     RET
-puts:
+.endproc
+
+.proc puts
 puts_loop:
     MOV R0, MEM.ADDR
     MOV MEM.R8, R1
@@ -25,3 +29,4 @@ puts_loop:
     JMP puts_loop
 puts_done:
     RET
+.endproc

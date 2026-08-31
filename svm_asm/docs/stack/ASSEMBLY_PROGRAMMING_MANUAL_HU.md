@@ -5,6 +5,13 @@
 
 Ez a dokumentum a jelenlegi költségoptimalizált **SVM-S v2 / executable v3** veremgép programozási kézikönyve. Az assembler Forth-szerű, de a rendszer nem interaktív Forth: a forrás előre gépi kódra fordul.
 
+## Eljárásblokkok és nem használt kód eltávolítása
+
+A nyilvános/hívható rutinokat `.proc NAME` ... `.endproc` blokkokban célszerű írni. Az `.entry NAME` a program belépési eljárását elérhetőségi gyökérré teszi; a `.keep NAME` hardveres callback vagy önálló könyvtári töredék explicit megtartására szolgál. Az assembler az `.include` és `.equ` kifejtése után eltávolítja azokat a `.proc` blokkokat, amelyek ezekből a gyökerekből vagy az élő kódban szereplő szimbolikus hivatkozásokból nem érhetők el. Az eljáráson belüli közönséges címkék továbbra is helyi vezérlési címkék, nem külön elhagyható eljárások.
+
+Stack ISA esetén a `.proc` **nem** generál automatikus `RET` utasítást; visszatérő rutin végére `RET`-et kell írni. A natív `: név ... ;` alak alacsony szintű Stack-assembler konstrukcióként megmarad, de nem procedure-GC határ, ezért újrafelhasználható könyvtári rutinokhoz nem javasolt.
+
+
 ## 1. Programozói modell
 
 A gép:
@@ -32,14 +39,13 @@ A jobb szélső elem a verem teteje.
 ```forth
 .load 0x0200
 .entry main
-
-: main
+.proc main
     1 2 + DROP
     HALT
-;
+.endproc
 ```
 
-A `:` új definíciót kezd, a `;` pedig `RET`-et generál.
+A régi/alacsony szintű `: név ... ;` forma továbbra is új definíciót hoz létre és a `;` `RET`-et generál, de új kódhoz a `.proc/.endproc` forma javasolt, mert csak ez képez procedure-GC határt. `.proc` esetén a `RET`-et explicit kell kiírni.
 
 ## 3. Lexikai szabályok
 
@@ -223,15 +229,14 @@ Ezek akkor jók, amikor a pointert a feldolgozás után továbbra is meg kell ta
 ```forth
 .load 0x0200
 .entry main
-
-: main
+.proc main
     0x3000 0x4000
     256 0 DO
         SWAP C@+ ROT C!+
     LOOP
     2DROP
     HALT
-;
+.endproc
 ```
 
 A ciklus után a frissített forrás- és célpointer marad a stacken, majd `2DROP` eltávolítja őket.
@@ -494,3 +499,10 @@ A hex opcode, utasításhossz és ciklusidő táblázatai: [INSTRUCTION_REFERENC
 ## Minimális carry állapot
 
 A Stack CPU egyetlen rejtett `C` bitet tart fenn kizárólag többwordös integer aritmetikához. `ADD` és `SHL1` carry-outot, `SUB` no-borrow értéket, `SHR1` a kieső bit0-t írja bele. `ADC`, `SBC` és `RCR1` ezt az állapotot használja. Az összehasonlítások és feltételes vezérlés továbbra is explicit stackértékkel működnek; nincs általános státuszregiszter.
+
+## Grafikai könyvtár
+
+A `graphics.asm` exportálja a gyors `gfx_set_color`, `gfx_set_palette`, `putpixel`, `clear`, `hline`, `vline` primitíveket, továbbá a magasabb szintű `line`, `rect`, `fillrect`, `circle`, `fillcircle` eljárásokat. ABI: ( szín -- ), paletta ( p0 p1 p2 p3 -- ), putpixel ( x y -- ), clear ( szín -- ), hline ( x0 x1 y -- ), vline ( x y0 y1 -- ). A nem használt eljárásokat a procedure-GC eltávolítja.
+
+Az öt vagy több logikai paramétert igénylő alakzatok minden ISA-n ugyanazt a 16 bites grafikai paraméterblokkot használják: `GFX_X0=0x00C0`, `GFX_Y0=0x00C2`, `GFX_X1=0x00C4`, `GFX_Y1=0x00C6`, `GFX_W=0x00C8`, `GFX_H=0x00CA`, `GFX_R=0x00CC`, `GFX_COLOR=0x00CE`. A `0x00B0..0x00BE` tartomány egyes targeteken belső virtuálisregiszter-scratch; a `0x00D0..0x00FA` tartomány további grafikai scratch/current-color terület. A `graphics.asm` használatakor ezért a teljes `0x00B0..0x00FA` tartomány fenntartott. `line` az `(x0,y0,x1,y1,color)`, `rect/fillrect` az `(x,y,w,h,color)`, `circle/fillcircle` a `(cx,cy,r,color)` mezőket olvassa. A procedure-GC a nem használt alakzatrutinokat és függőségeiket eltávolítja.
+

@@ -27,6 +27,8 @@ target/release/svm-asm register svm_asm/examples/register/text_demo.asm
 target/release/svm-rt svm_asm/examples/register/text_demo.svm
 ```
 
+Az assembly példák `.proc/.endproc` eljárásblokkokat használnak. A fordítás az include-ok kifejtése után procedure-GC-t futtat, így a teljes standard könyvtár behúzható anélkül, hogy minden nem használt rutin bekerülne a binárisba.
+
 A runtime a fájl 4 byte-os magic mezőjéből dönti el, melyik CPU-magot kell használni.
 
 ## Példa: TTA16 assembly

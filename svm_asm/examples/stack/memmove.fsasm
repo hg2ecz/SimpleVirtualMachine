@@ -1,6 +1,17 @@
 \ Core pointer walkers for overlap-safe memmove.
+\ Keep both because this is a standalone library-fragment example.
+.keep copy1_forward
+.keep copy1_backward
+
 \ Forward one byte: ( src dst -- src+1 dst+1 )
-: COPY1+  SWAP C@+ ROT C!+ ;
+.proc copy1_forward
+    SWAP C@+ ROT C!+
+    RET
+.endproc
+
 \ Backward one byte. Pointers start one byte past the regions:
 \ ( src_end dst_end -- src_end-1 dst_end-1 )
-: COPY1-  SWAP C@- ROT C!- ;
+.proc copy1_backward
+    SWAP C@- ROT C!-
+    RET
+.endproc

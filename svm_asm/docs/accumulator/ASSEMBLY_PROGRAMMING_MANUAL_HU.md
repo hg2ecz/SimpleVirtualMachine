@@ -3,6 +3,11 @@
 
 > A jelenlegi videómodellben a normál rendszerterület és a videómemória két külön 16 bites címtér. A normál memóriautasítás nem lép át a videótérbe. A hiteles kiosztás: `../../../docs/PLATFORM_HU.md`.
 
+## Eljárásblokkok és nem használt kód eltávolítása
+
+A nyilvános/hívható rutinokat `.proc NAME` ... `.endproc` blokkokban célszerű írni. Az `.entry NAME` a program belépési eljárását elérhetőségi gyökérré teszi; a `.keep NAME` hardveres callback vagy önálló könyvtári töredék explicit megtartására szolgál. Az assembler az `.include` és `.equ` kifejtése után eltávolítja azokat a `.proc` blokkokat, amelyek ezekből a gyökerekből vagy az élő kódban szereplő szimbolikus hivatkozásokból nem érhetők el. Az eljáráson belüli közönséges címkék továbbra is helyi vezérlési címkék, nem külön elhagyható eljárások.
+
+
 ## Programozási modell
 
 A CPU szándékosan kevés állapotot tartalmaz:
@@ -21,11 +26,11 @@ A bináris aritmetika alapformája `A op X`, így általános regiszterfájl né
 ```asm
 .load 0
 .entry start
-
-start:
+.proc start
     LDAI 72
     STA8 0xFF20
     HALT
+.endproc
 ```
 
 ## Kifejezések
@@ -97,3 +102,10 @@ A közös platform 32 bites virtuális órát, egy 16 bites timert és timer/VSY
 ## Utasításkódolás és végrehajtási idő
 
 A hex opcode, utasításhossz és ciklusidő táblázatai: [INSTRUCTION_REFERENCE_HU.md](INSTRUCTION_REFERENCE_HU.md).
+
+## Grafikai könyvtár
+
+A `graphics.asm` exportálja a gyors `gfx_set_color`, `gfx_set_palette`, `putpixel`, `clear`, `hline`, `vline` primitíveket, továbbá a magasabb szintű `line`, `rect`, `fillrect`, `circle`, `fillcircle` eljárásokat. ABI: A=szín; paletta: X -> 4 bájtos tábla; putpixel: X=x, Y=y; clear: A=szín; hline: X=x0, Y=x1, A=y; vline: A=x, X=y0, Y=y1. A nem használt eljárásokat a procedure-GC eltávolítja.
+
+Az öt vagy több logikai paramétert igénylő alakzatok minden ISA-n ugyanazt a 16 bites grafikai paraméterblokkot használják: `GFX_X0=0x00C0`, `GFX_Y0=0x00C2`, `GFX_X1=0x00C4`, `GFX_Y1=0x00C6`, `GFX_W=0x00C8`, `GFX_H=0x00CA`, `GFX_R=0x00CC`, `GFX_COLOR=0x00CE`. A `0x00B0..0x00BE` tartomány egyes targeteken belső virtuálisregiszter-scratch; a `0x00D0..0x00FA` tartomány további grafikai scratch/current-color terület. A `graphics.asm` használatakor ezért a teljes `0x00B0..0x00FA` tartomány fenntartott. `line` az `(x0,y0,x1,y1,color)`, `rect/fillrect` az `(x,y,w,h,color)`, `circle/fillcircle` a `(cx,cy,r,color)` mezőket olvassa. A procedure-GC a nem használt alakzatrutinokat és függőségeiket eltávolítja.
+

@@ -3,7 +3,7 @@
 .load 0x0100
 .entry start
 
-start:
+.proc start
     ; Four 2-bit pixels, all palette slot 3.
     LDI 0x0000      ; b0=VRAM address
     LDI 0x00FF      ; b0=packed pixels, b1=VRAM address
@@ -18,3 +18,4 @@ start:
     ST8A 0xFF06,b0  ; TEXT_CHAR = 'A'
 
     HALT
+.endproc

@@ -23,3 +23,5 @@ compiled for Belt16, for example:
 svm-c --target belt -O2 svm_c/examples/hello.sc hello.svb
 svm-c-unopt-only --target belt svm_c/examples/hello.sc hello-unopt.svb
 ```
+All standalone entry routines and callable helpers in these examples use `.proc` / `.endproc`, so the examples exercise assembler procedure-GC as well as the target ISA.
+

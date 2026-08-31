@@ -86,7 +86,7 @@ pub fn emit(p: &Program, l: &Layout, opt: OptLevel) -> Result<String, String> {
     e.line(".load 0x0100");
     e.line(".entry __start");
     e.blank();
-    e.line("__start:");
+    e.line(".proc __start");
     e.comment("program initialization");
     for g in &p.globals {
         if let Some(Expr::Num(v)) = &g.init {
@@ -102,6 +102,7 @@ pub fn emit(p: &Program, l: &Layout, opt: OptLevel) -> Result<String, String> {
     e.comment("enter user program");
     e.line("CALL main");
     e.line("HALT");
+    e.line(".endproc");
     for f in &p.functions {
         e.function(f)?
     }
@@ -144,7 +145,7 @@ impl<'a> E<'a> {
         self.loops.clear();
         self.blank();
         self.comment(&format!("function {}", f.name));
-        self.line(&format!("{}:", f.name));
+        self.line(&format!(".proc {}", f.name));
         for a in &f.params {
             let v = self.var(&a.name)?;
             self.comment(&format!(
@@ -159,6 +160,7 @@ impl<'a> E<'a> {
             self.line("LDAI 0");
             self.line("RET")
         }
+        self.line(".endproc");
         Ok(())
     }
     fn load(&mut self, v: &VarInfo) {
@@ -629,8 +631,12 @@ impl<'a> E<'a> {
             .find(|f| f.name == n)
             .cloned()
             .ok_or_else(|| format!("unknown function '{n}'"))?;
-        for (arg, param) in a.iter().zip(f.params.iter()) {
+        for arg in a {
             self.expr(arg)?;
+            self.line("PUSHA");
+        }
+        for param in f.params.iter().rev() {
+            self.line("POPA");
             let v = self
                 .layout
                 .var(n, &param.name)

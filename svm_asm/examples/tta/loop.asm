@@ -1,6 +1,6 @@
 ; Count R0 down to zero. SUB is triggered by transport to ALU.SUB.
 .entry start
-start:
+.proc start
     MOV 5, R0
 loop:
     MOV R0, ALU.X
@@ -8,3 +8,4 @@ loop:
     MOV ALU.OUT, R0
     JNZ loop
     HALT
+.endproc

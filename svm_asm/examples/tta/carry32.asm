@@ -1,6 +1,6 @@
 ; 0x0000_FFFF + 1 using ADD then ADC.
 .entry start
-start:
+.proc start
     MOV 0xFFFF, R0       ; low
     MOV 0x0000, R1       ; high
     MOV R0, ALU.X
@@ -10,3 +10,4 @@ start:
     MOV 0, ALU.ADC
     MOV ALU.OUT, R1
     HALT
+.endproc

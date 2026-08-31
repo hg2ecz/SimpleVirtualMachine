@@ -3,7 +3,7 @@
 .load 0x0200
 .entry start
 
-start:
+.proc start
     MOVI R1, 0xFF0D      ; palette slot 1 selector
     MOVI R2, 1           ; blue
     STORE8 [R1], R2
@@ -47,3 +47,4 @@ start:
     MOVI R0, 79          ; O
     STORE8 [R3], R0
     HALT
+.endproc

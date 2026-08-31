@@ -5,6 +5,13 @@
 
 This document is the programming manual for the current cost-optimized **SVM-S v2 / executable v3** stack machine. The assembler uses a Forth-like syntax, but the system is not an interactive Forth: source code is assembled ahead of time into machine code.
 
+## Procedure blocks and unused-code removal
+
+Public/callable routines should be written as `.proc NAME` ... `.endproc` blocks. `.entry NAME` makes the program entry procedure a reachability root; `.keep NAME` keeps hardware callbacks or standalone library-fragment procedures explicitly. After `.include` and `.equ` expansion, the assembler removes `.proc` blocks that are not reachable from these roots or from symbolic references in live code. Ordinary labels inside a procedure remain local control-flow labels and do not define separate collectible procedures.
+
+For the Stack ISA, `.proc` does **not** synthesize `RET`; write `RET` explicitly when the routine returns. The native `: name ... ;` form remains a low-level Stack-assembler construct, but it is not a procedure-GC boundary and is therefore not recommended for reusable library routines.
+
+
 ## 1. Programmer's model
 
 The machine:
@@ -32,14 +39,13 @@ The rightmost item is the top of the stack.
 ```forth
 .load 0x0200
 .entry main
-
-: main
+.proc main
     1 2 + DROP
     HALT
-;
+.endproc
 ```
 
-`:` starts a new definition and `;` emits `RET`.
+The legacy/low-level `: name ... ;` form still creates a definition and `;` emits `RET`, but new code should use `.proc/.endproc` because only that form is a procedure-GC boundary. With `.proc`, write `RET` explicitly.
 
 ## 3. Lexical rules
 
@@ -223,15 +229,14 @@ These are useful when the updated pointer must remain available after the access
 ```forth
 .load 0x0200
 .entry main
-
-: main
+.proc main
     0x3000 0x4000
     256 0 DO
         SWAP C@+ ROT C!+
     LOOP
     2DROP
     HALT
-;
+.endproc
 ```
 
 After the loop, the updated source and destination pointers remain on the stack; `2DROP` removes them.
@@ -489,3 +494,10 @@ The shared machine provides a 32-bit virtual clock, one 16-bit timer, and timer/
 ## Minimal carry state
 
 The Stack CPU keeps one hidden `C` bit solely for multiword integer arithmetic. `ADD` and `SHL1` write carry-out, `SUB` writes no-borrow, and `SHR1` writes the shifted-out bit0. `ADC`, `SBC`, and `RCR1` consume this state. Comparisons and conditional control still use explicit stack values; there is no general status register.
+
+## Graphics library
+
+`graphics.asm` exports the fast `gfx_set_color`, `gfx_set_palette`, `putpixel`, `clear`, `hline`, and `vline` primitives plus the higher-level `line`, `rect`, `fillrect`, `circle`, and `fillcircle` procedures. ABI: ( color -- ), palette ( p0 p1 p2 p3 -- ), putpixel ( x y -- ), clear ( color -- ), hline ( x0 x1 y -- ), vline ( x y0 y1 -- ). Unused procedures are removed by procedure-GC.
+
+Shapes with five or more logical parameters use the same 16-bit graphics parameter block on every ISA: `GFX_X0=0x00C0`, `GFX_Y0=0x00C2`, `GFX_X1=0x00C4`, `GFX_Y1=0x00C6`, `GFX_W=0x00C8`, `GFX_H=0x00CA`, `GFX_R=0x00CC`, `GFX_COLOR=0x00CE`. `0x00B0..0x00BE` is internal virtual-register scratch on some targets; `0x00D0..0x00FA` is additional graphics scratch/current-colour storage. Therefore `graphics.asm` reserves the full `0x00B0..0x00FA` range. `line` reads `(x0,y0,x1,y1,color)`, `rect/fillrect` read `(x,y,w,h,color)`, and `circle/fillcircle` read `(cx,cy,r,color)`. Procedure-GC removes unused shape procedures and dependencies.
+

@@ -24,7 +24,7 @@ A passz **a statikus memória-kiosztás előtt** fut, ezért a dead függvények
 - lokális/statikus compiler-objektumaik nem foglalnak RAM-ot;
 - egy nagy könyvtár `include`-ja önmagában nem növeli a programképet az összes könyvtári rutinnal.
 
-`-O0` és `svm-c-unopt-only` szándékosan megtart minden beolvasott függvényt az oktatási és kódgenerálási összehasonlíthatóság érdekében.
+`-O0` és `svm-c-unopt-only` szándékosan megtart minden beolvasott függvényt a C-szintű kódgenerálásig az oktatási és kódgenerálási összehasonlíthatóság érdekében. `--emit asm` esetén ezek a `.proc` blokkok láthatók is; bináris kimenetnél azonban a kötelező assembler procedure-GC az el nem érhető generált eljárásokat ekkor is eltávolítja.
 
 A nyelv jelenleg nem támogat függvénypointert, ezért a direct-call reachability teljes a támogatott nyelvi modellen belül.
 

@@ -15,7 +15,8 @@ A behúzott fájl ugyanannak az assembly fordítási egységnek a része. Az ISA
 Relatív névnél a keresési sorrend:
 
 1. az include-ot tartalmazó fájl saját könyvtára;
-2. a parancssori `-I` könyvtárak, a megadás sorrendjében.
+2. a parancssori `-I` könyvtárak, a megadás sorrendjében;
+3. az `svm-asm` CLI által automatikusan hozzáadott `svm_asm/lib/<target>/` beépített könyvtár.
 
 Példa:
 
@@ -35,3 +36,18 @@ Az include rekurzív: egy könyvtárfájl további fájlokat is behúzhat. Egy k
 - nincs feltételes include;
 - nincs külön linkelési fázis;
 - minden behúzott definíció ugyanahhoz az egy fordítási egységhez tartozik.
+
+## Standard targetkönyvtár
+
+A parancssori assembler a kiválasztott architektúra könyvtárát automatikusan include-útvonalként kezeli. Így a kézi programban elegendő például:
+
+```asm
+.include "platform.asm"
+.include "console.asm"
+```
+
+A `platform.asm` minden targetnél azonos szimbolikus MMIO-neveket ad a `.equ` előfeldolgozó segítségével.
+
+## Kapcsolat a procedure-GC-vel
+
+Az include továbbra is szövegesen egyetlen fordítási egységet hoz létre, de ez már nem jelenti azt, hogy minden behúzott rutin bekerül a binárisba. A könyvtári rutinokat `.proc/.endproc` blokkokban kell deklarálni; az include és `.equ` kifejtése után a procedure-GC csak az elérhető blokkokat hagyja meg. A konstansokat és az eljáráson kívüli globális forrásrészeket a passz nem tekinti elhagyható eljárásnak.

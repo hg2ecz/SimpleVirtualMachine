@@ -82,3 +82,11 @@ or arithmetic libraries. See `examples/smoke/README.md` for the individual tests
 - `console_library.sc` - include-able console formatting helpers (`newline`, `putu16`, `puthex16`).
 
 - `graphics.sc` - 2-bpp drawing helpers: pixels, lines, rectangles, circles and palette setup.
+
+## General library example
+
+`stdlib_demo.sc` demonstrates the C-first include-able library (`memory.sc`, conversion, CRC, ring buffer and run-time string output through `putstr`). Example build from the repository root:
+
+```sh
+svm-c --target register -O2 -I svm_c/lib svm_c/examples/stdlib_demo.sc stdlib_demo.svm
+```

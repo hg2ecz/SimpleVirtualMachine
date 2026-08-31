@@ -84,7 +84,7 @@ pub fn emit(p: &Program, l: &Layout, opt: OptLevel) -> Result<String, String> {
     e.line(".load 0x0100");
     e.line(".entry __start");
     e.blank();
-    e.line("__start:");
+    e.line(".proc __start");
     for g in &p.globals {
         if let Some(Expr::Num(v)) = &g.init {
             e.line(&format!("LDI {v}"));
@@ -97,6 +97,7 @@ pub fn emit(p: &Program, l: &Layout, opt: OptLevel) -> Result<String, String> {
     }
     e.line("CALL main");
     e.line("HALT");
+    e.line(".endproc");
     for f in &p.functions {
         e.fun(f)?
     }
@@ -155,7 +156,7 @@ impl<'a> E<'a> {
         self.loops.clear();
         self.blank();
         self.c(&format!("function {}", f.name));
-        self.line(&format!("{}:", f.name));
+        self.line(&format!(".proc {}", f.name));
         for a in &f.params {
             let v = self.var(&a.name)?;
             self.c(&format!(
@@ -170,6 +171,7 @@ impl<'a> E<'a> {
             self.line("LDI 0");
             self.line("RET")
         }
+        self.line(".endproc");
         Ok(())
     }
     fn stmt(&mut self, s: &Stmt) -> Result<(), String> {
@@ -694,8 +696,12 @@ impl<'a> E<'a> {
             .find(|f| f.name == n)
             .cloned()
             .ok_or_else(|| "missing function".to_string())?;
-        for (x, p) in a.iter().zip(f.params.iter()) {
+        for x in a {
             self.expr(x)?;
+            self.line("PUSHW");
+        }
+        for p in f.params.iter().rev() {
+            self.line("POPW");
             let v = self
                 .l
                 .var(n, &p.name)

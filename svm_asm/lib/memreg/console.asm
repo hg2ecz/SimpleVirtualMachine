@@ -1,18 +1,22 @@
 ; MemReg ISA console helpers. Console byte MMIO = 0xFF20.
 ; ABI: putc W=char; puts FSR0=pointer to NUL-terminated RAM string.
 ; FSR1 is used as the console pointer.
-putc:
+.proc putc
     FSR1I 0xFF20
     STB1
     RET
-newline:
+.endproc
+
+.proc newline
     FSR1I 0xFF20
     LDI 13
     STB1
     LDI 10
     STB1
     RET
-puts:
+.endproc
+
+.proc puts
     FSR1I 0xFF20
 puts_loop:
     LDB0+
@@ -22,3 +26,4 @@ puts_loop:
     JMP puts_loop
 puts_done:
     RET
+.endproc

@@ -82,6 +82,7 @@ pub fn emit(p: &Program, l: &Layout, opt: OptLevel) -> Result<String, String> {
         out: String::new(),
         n: 0,
         layout: l,
+        program: p,
         fun: String::new(),
         loops: Vec::new(),
     };
@@ -92,7 +93,7 @@ pub fn emit(p: &Program, l: &Layout, opt: OptLevel) -> Result<String, String> {
     e.line(".load 0x0100");
     e.line(".entry __start");
     e.blank();
-    e.line("__start:");
+    e.line(".proc __start");
     e.comment("program initialization");
     for g in &p.globals {
         if let Some(Expr::Num(v)) = &g.init {
@@ -108,6 +109,7 @@ pub fn emit(p: &Program, l: &Layout, opt: OptLevel) -> Result<String, String> {
     e.comment("enter user program");
     e.line("CALL main");
     e.line("HALT");
+    e.line(".endproc");
     for f in &p.functions {
         e.function(f)?;
     }
@@ -117,6 +119,7 @@ struct E<'a> {
     out: String,
     n: usize,
     layout: &'a Layout,
+    program: &'a Program,
     fun: String,
     loops: Vec<(String, String)>, // (continue target, break target)
 }
@@ -149,27 +152,13 @@ impl<'a> E<'a> {
         self.loops.clear();
         self.blank();
         self.comment(&format!("function {}", f.name));
-        self.line(&format!("{}:", f.name));
-        for (i, a) in f.params.iter().enumerate() {
+        self.line(&format!(".proc {}", f.name));
+        for a in &f.params {
             let v = self.var(&a.name)?;
-            self.comment(&format!("parameter {} -> 0x{:04X}", a.name, v.addr));
-            if v.addr <= 0x00FF {
-                if i != 0 {
-                    self.line(&format!("MOV R0, R{}", i));
-                }
-                self.line(&format!(
-                    "ZSTORE{} 0x{:02X}",
-                    if v.ty.size() == 1 { "8" } else { "16" },
-                    v.addr
-                ));
-            } else {
-                self.line(&format!("MOVI R7, 0x{:04X}", v.addr));
-                self.line(&format!(
-                    "STORE{} [R7], R{}",
-                    if v.ty.size() == 1 { "8" } else { "16" },
-                    i
-                ));
-            }
+            self.comment(&format!(
+                "parameter {} at 0x{:04X} (caller stores it)",
+                a.name, v.addr
+            ));
         }
         self.stmt(&f.body)?;
         if f.ret == Ty::Void {
@@ -178,6 +167,7 @@ impl<'a> E<'a> {
             self.line("MOVI R0, 0");
             self.line("RET")
         }
+        self.line(".endproc");
         Ok(())
     }
     fn load(&mut self, v: &VarInfo) {
@@ -706,12 +696,37 @@ impl<'a> E<'a> {
                 sig.params.len()
             ));
         }
-        for x in a {
-            self.expr(x)?;
-            self.line("PUSH R0")
+        let f = self
+            .program
+            .functions
+            .iter()
+            .find(|f| f.name == n)
+            .cloned()
+            .ok_or_else(|| format!("unknown function '{n}'"))?;
+        for arg in a {
+            self.expr(arg)?;
+            self.line("PUSH R0");
         }
-        for i in (0..a.len()).rev() {
-            self.line(&format!("POP R{i}"))
+        for param in f.params.iter().rev() {
+            self.line("POP R0");
+            let v = self
+                .layout
+                .var(n, &param.name)
+                .cloned()
+                .ok_or_else(|| format!("missing parameter layout for {n}.{}", param.name))?;
+            if v.addr <= 0x00FF {
+                self.line(&format!(
+                    "ZSTORE{} 0x{:02X}",
+                    if v.ty.size() == 1 { "8" } else { "16" },
+                    v.addr
+                ));
+            } else {
+                self.line(&format!("MOVI R1, 0x{:04X}", v.addr));
+                self.line(&format!(
+                    "STORE{} [R1], R0",
+                    if v.ty.size() == 1 { "8" } else { "16" }
+                ));
+            }
         }
         self.line(&format!("CALL {n}"));
         Ok(())

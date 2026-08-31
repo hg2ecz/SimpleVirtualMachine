@@ -5,6 +5,11 @@
 
 Ez a dokumentum a jelenlegi, költségoptimalizált **SVM Register CPU ISA v2 / executable v5** programozási kézikönyve. A cél nem pusztán az opcode-ok felsorolása, hanem annak bemutatása, hogyan érdemes a gépet hatékonyan programozni.
 
+## Eljárásblokkok és nem használt kód eltávolítása
+
+A nyilvános/hívható rutinokat `.proc NAME` ... `.endproc` blokkokban célszerű írni. Az `.entry NAME` a program belépési eljárását elérhetőségi gyökérré teszi; a `.keep NAME` hardveres callback vagy önálló könyvtári töredék explicit megtartására szolgál. Az assembler az `.include` és `.equ` kifejtése után eltávolítja azokat a `.proc` blokkokat, amelyek ezekből a gyökerekből vagy az élő kódban szereplő szimbolikus hivatkozásokból nem érhetők el. Az eljáráson belüli közönséges címkék továbbra is helyi vezérlési címkék, nem külön elhagyható eljárások.
+
+
 ## 1. A gép programozói modellje
 
 A CPU 16 bites, little-endian rendszer, 64 KiB címtérrel.
@@ -25,16 +30,20 @@ Minimális program:
 ```asm
 .load 0x0200
 .entry start
-
-start:
+.proc start
     MOVI R0, 1
     HALT
+.endproc
 ```
 
 ### Direktívák
 
 - `.load cím` – a program betöltési címe
-- `.entry cím_vagy_label` – belépési pont
+- `.entry eljárás` – belépési eljárás és procedure-GC gyökér
+- `.proc név` / `.endproc` – elhagyható eljárásblokk
+- `.keep név` – eljárás explicit megtartása
+- `.include "fájl"` – forráskönyvtár behúzása
+- `.equ név, érték` – szimbolikus konstans
 
 ### Megjegyzés
 
@@ -293,8 +302,7 @@ A post-increment loadnál a cél- és címregiszternek különböznie kell.
 ```asm
 .load 0x0200
 .entry start
-
-start:
+.proc start
     MOVI R0, 0x3000
     MOVI R1, 0x4000
     MOVI R2, 256
@@ -304,6 +312,7 @@ copy:
     DEC R2
     JNZ copy
     HALT
+.endproc
 ```
 
 Ez a javasolt forma lineáris buffer-, string- és framebuffer-műveletekhez.
@@ -395,3 +404,14 @@ A hex opcode, utasításhossz és ciklusidő táblázatai: [INSTRUCTION_REFERENC
 ## Register ISA v3 kódsűrűségi változás
 
 A `B0..BF` egybájtos compact család `AND` műveletet kódol `R0..R3` között; az `XOR` továbbra is teljes értékű általános kétregiszteres utasítás. A `SUBI` hardveres immediate család megmarad, mert az `ADDI -imm16` ugyanazt a numerikus eredményt adja, de a carry/no-borrow flag szemantikája nem minden esetben azonos. A maszkos `AND` gyakorisága miatt a compact hely átcsoportosítása továbbra is jó ár–értékű.
+
+## Grafikai könyvtár
+
+A `graphics.asm` exportálja a gyors `gfx_set_color`, `gfx_set_palette`, `putpixel`, `clear`, `hline`, `vline` primitíveket, továbbá a magasabb szintű `line`, `rect`, `fillrect`, `circle`, `fillcircle` eljárásokat. ABI: R0=szín; paletta: R0..R3; putpixel: R0=x,R1=y; clear: R0=szín; hline: R0=x0,R1=x1,R2=y; vline: R0=x,R1=y0,R2=y1. A nem használt eljárásokat a procedure-GC eltávolítja.
+
+Az öt vagy több logikai paramétert igénylő alakzatok minden ISA-n ugyanazt a 16 bites grafikai paraméterblokkot használják: `GFX_X0=0x00C0`, `GFX_Y0=0x00C2`, `GFX_X1=0x00C4`, `GFX_Y1=0x00C6`, `GFX_W=0x00C8`, `GFX_H=0x00CA`, `GFX_R=0x00CC`, `GFX_COLOR=0x00CE`. A `0x00B0..0x00BE` tartomány egyes targeteken belső virtuálisregiszter-scratch; a `0x00D0..0x00FA` tartomány további grafikai scratch/current-color terület. A `graphics.asm` használatakor ezért a teljes `0x00B0..0x00FA` tartomány fenntartott. `line` az `(x0,y0,x1,y1,color)`, `rect/fillrect` az `(x,y,w,h,color)`, `circle/fillcircle` a `(cx,cy,r,color)` mezőket olvassa. A procedure-GC a nem használt alakzatrutinokat és függőségeiket eltávolítja.
+
+
+## Typed arithmetic reference include
+
+The Register standard library also contains `typed_arith.asm` and `typed_convert.asm` as an educational typed arithmetic/conversion reference. See the common `TYPED_ARITHMETIC_LIBRARY_HU.md` / `TYPED_ARITHMETIC_LIBRARY_EN.md` documentation. The portable full IEEE soft-float implementation remains in SVM-C.

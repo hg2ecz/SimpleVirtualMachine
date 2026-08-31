@@ -1,15 +1,19 @@
 ; Accumulator ISA console helpers. Console byte MMIO = 0xFF20.
 ; ABI: putc A=char; puts X=pointer to NUL-terminated RAM string.
-putc:
+.proc putc
     STA8 0xFF20
     RET
-newline:
+.endproc
+
+.proc newline
     LDAI 13
     STA8 0xFF20
     LDAI 10
     STA8 0xFF20
     RET
-puts:
+.endproc
+
+.proc puts
 puts_loop:
     LDA8 [X+]
     CMPI 0
@@ -18,3 +22,4 @@ puts_loop:
     JMP puts_loop
 puts_done:
     RET
+.endproc

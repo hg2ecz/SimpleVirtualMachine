@@ -3,7 +3,7 @@
 
 ; Copy 256 bytes from 0x3000 to 0x4000.
 ; R0/R1 are walking pointers, R2 is count, R3 is the byte.
-start:
+.proc start
     MOVI R0, 0x3000
     MOVI R1, 0x4000
     MOVI R2, 256
@@ -13,3 +13,4 @@ copy:
     DEC R2
     JNZ copy
     HALT
+.endproc

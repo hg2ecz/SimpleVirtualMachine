@@ -32,6 +32,10 @@ A Memory-to-Memory backend nem tartalmaz rejtett GPR-készletet. A register-expr
 
 Az include-rendszer mind a kilenc assembler/C target előtt lefut, ezért a saját függvénykönyvtárak architektúrától függetlenül használhatók.
 
+## Assembler procedure-GC
+
+Mind a kilenc assembler target közös `.proc/.endproc` eljárásmodellt használ. Az `.entry` és `.keep` gyökerekből, valamint az élő kódban szereplő szimbolikus hivatkozásokból felépített elérhetőségi gráf alapján a végső target assembler előtt kiesnek a nem használt eljárások. Az `svm_asm/lib/<arch>/` hívható rutinjai ezt a formát használják; a példaprogramok belépési és külön hívható rutinjai szintén `.proc` blokkok.
+
 ## Tudatosan későbbre hagyott optimalizációk
 
 - automatikus branch relaxation a három új assemblerben;
@@ -43,7 +47,7 @@ Ezek teljesítmény/kódsűrűségi optimalizációk; az alapvető assembler/run
 
 ## C nyelv és könyvtárak
 
-A közös `svm_c` frontend mind a kilenc targetet kezeli. Külön `svm-c-unopt-only` referenciaút mutatja az optimalizáló réteg nélküli fordítást. `-O1/-O2/-Os` alatt a `main()`-ből tranzitívan nem elérhető függvények még a statikus layout előtt kiesnek; `-O0` és `svm-c-unopt-only` minden beolvasott függvényt megtart. A nyelv natív 8/16 bites skalárokat és cím-alapú 32/64 bites tárolási objektumokat támogat; `wide_int.sc`, `f16.sc` és `f32.sc` ad szoftveres többwordös/lebegőpontos aritmetikát.
+A közös `svm_c` frontend mind a kilenc targetet kezeli. Külön `svm-c-unopt-only` referenciaút mutatja az optimalizáló réteg nélküli fordítást. `-O1/-O2/-Os` alatt a `main()`-ből tranzitívan nem elérhető függvények még a statikus layout előtt kiesnek; `-O0` és `svm-c-unopt-only` minden beolvasott függvényt eljuttat a C-szintű kódgenerálásig. Bináris kimenetnél azonban minden fordítási módban lefut az assembler procedure-GC, ezért az el nem érhető generált `.proc` blokkok ekkor sem kerülnek a gépi kódba; `--emit asm` esetén viszont megmaradnak elemzéshez. A nyelv natív 8/16 bites skalárokat és cím-alapú 32/64 bites tárolási objektumokat támogat; `wide_int.sc`, `f16.sc` és `f32.sc` ad szoftveres többwordös/lebegőpontos aritmetikát.
 
 ## RNG
 

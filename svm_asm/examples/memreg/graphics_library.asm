@@ -1,0 +1,30 @@
+.load 0x0100
+.include "graphics.asm"
+.entry start
+.proc start
+    LDI 0
+    CALL clear
+    LDI 10
+    MOV16 W,GFX_X0
+    LDI 10
+    MOV16 W,GFX_Y0
+    LDI 309
+    MOV16 W,GFX_X1
+    LDI 189
+    MOV16 W,GFX_Y1
+    LDI 1
+    MOV16 W,GFX_COLOR
+    CALL line
+    LDI 120
+    MOV16 W,GFX_X0
+    LDI 60
+    MOV16 W,GFX_Y0
+    LDI 80
+    MOV16 W,GFX_W
+    LDI 50
+    MOV16 W,GFX_H
+    LDI 2
+    MOV16 W,GFX_COLOR
+    CALL fillrect
+    HALT
+.endproc

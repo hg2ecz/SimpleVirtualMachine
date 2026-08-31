@@ -1,29 +1,39 @@
 ; 40x25 framebuffer text-screen helpers.
 ; text_goto: X=x, Y=y. text_set_colors: X=fg, Y=bg. text_putc: A=char.
-text_goto:
+.proc text_goto
     TXA
     STA8 0xFF02
     TYA
     STA8 0xFF03
     RET
-text_set_colors:
+.endproc
+
+.proc text_set_colors
     TXA
     STA8 0xFF04
     TYA
     STA8 0xFF05
     RET
-text_home:
+.endproc
+
+.proc text_home
     LDXI 0
     LDYI 0
     JMP text_goto
-text_cr:
+.endproc
+
+.proc text_cr
     LDAI 0
     STA8 0xFF02
     RET
-text_putc:
+.endproc
+
+.proc text_putc
     STA8 0xFF06
     RET
-text_clear:
+.endproc
+
+.proc text_clear
     LDAI 0
     STA8 0x00F2
 text_clear_y:
@@ -47,3 +57,4 @@ text_clear_x:
     CMPI 25
     JNZ text_clear_y
     JMP text_home
+.endproc

@@ -24,7 +24,7 @@ The pass runs **before static-memory layout**, so dead functions:
 - consume no RAM for their local/compiler-owned static objects;
 - do not make a large included library occupy code/data space merely because it was included.
 
-`-O0` and `svm-c-unopt-only` deliberately retain every parsed function for educational and code-generation comparison.
+`-O0` and `svm-c-unopt-only` deliberately retain every parsed function through C-level code generation for educational and code-generation comparison. With `--emit asm` those `.proc` blocks remain visible; when producing a binary, the mandatory assembler procedure-GC still removes unreachable emitted procedures.
 
 SVM-C currently has no function pointers, so direct-call reachability is complete for the supported language model.
 

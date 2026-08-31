@@ -2,11 +2,13 @@
 .load 0x0000
 .entry main
 
-: emit   \ ( c -- )
+\ ( c -- )
+.proc emit
     0xFF20 C!
-;
+    RET
+.endproc
 
-: main
+.proc main
     72 emit   \ H
     69 emit   \ E
     76 emit   \ L
@@ -14,4 +16,4 @@
     79 emit   \ O
     10 emit
     HALT
-;
+.endproc

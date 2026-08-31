@@ -7,3 +7,7 @@ These examples target the current ISA and machine profile.
 - Other examples demonstrate video or architecture-specific features.
 
 For the cross-architecture integer benchmark, use `../../../svm_c/examples/fft_q15.sc` with the corresponding SVM-C target.
+All standalone entry routines and callable helpers in these examples use `.proc` / `.endproc`, so the examples exercise assembler procedure-GC as well as the target ISA.
+
+
+`algorithms_demo.asm` demonstrates a small hand-written helper included from `lib/register/algorithms_demo.asm`. Portable general algorithms are intentionally maintained in `svm_c/lib/` in C instead of being duplicated for every ISA.

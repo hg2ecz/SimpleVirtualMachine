@@ -35,3 +35,31 @@ void putu16(u16 v) {
         d = d / 10;
     }
 }
+
+// Print a zero-terminated string stored in SVM memory.
+void putstr(u16 s) {
+    u16 c;
+    while (1) {
+        c = load8(s);
+        if (c == 0) return;
+        putc(c);
+        s = s + 1;
+    }
+}
+
+void puti16(u16 v) {
+    if (v & 0x8000) {
+        putc(45);
+        v = 0 - v;
+    }
+    putu16(v);
+}
+
+void putbin16(u16 v) {
+    u16 mask;
+    mask = 0x8000;
+    while (mask != 0) {
+        if (v & mask) putc(49); else putc(48);
+        mask = mask >> 1;
+    }
+}

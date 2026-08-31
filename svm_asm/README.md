@@ -31,7 +31,7 @@ Assembly sources can include reusable files without a macro preprocessor:
 .include "lib/io.asm"
 ```
 
-Relative files are searched first beside the including source and then in `-I` directories. Recursive includes, include-once behavior, cycle detection, and a maximum depth of 64 are supported.
+Relative files are searched first beside the including source, then in `-I` directories, and the CLI also adds the selected target's built-in `lib/<arch>/` directory automatically. Recursive includes, include-once behavior, cycle detection, and a maximum depth of 64 are supported.
 
 See [`docs/SOURCE_INCLUDES_HU.md`](docs/SOURCE_INCLUDES_HU.md).
 
@@ -39,8 +39,16 @@ See [`docs/SOURCE_INCLUDES_HU.md`](docs/SOURCE_INCLUDES_HU.md).
 
 All handwritten assembly examples live under [`examples/`](examples/), grouped by target architecture. The runtime crate intentionally does not host assembly examples.
 
-Reusable ISA-specific source libraries are under `svm_asm/lib/<arch>/`; see `svm_asm/docs/CONSOLE_LIBRARY_HU.md` for the console helpers.
+Reusable ISA-specific source libraries are under `svm_asm/lib/<arch>/`. Each target has `platform.asm` with common MMIO `.equ` names; Register and Stack also provide initial `math.asm` and `format.asm` (`putu16`/`puti16`) reference libraries; see `svm_asm/docs/CONSOLE_LIBRARY_HU.md` for the console helpers.
 
-2-bpp graphics helpers and palette model: [`docs/GRAPHICS_LIBRARY_HU.md`](docs/GRAPHICS_LIBRARY_HU.md).
+2-bpp graphics helpers and palette model: [`docs/GRAPHICS_LIBRARY_HU.md`](docs/GRAPHICS_LIBRARY_HU.md) / [`docs/GRAPHICS_LIBRARY_EN.md`](docs/GRAPHICS_LIBRARY_EN.md).
 
 Per-ISA character-screen helper libraries are under `svm_asm/lib/<arch>/textscreen.asm`; see `svm_asm/docs/TEXT_SCREEN_LIBRARY_HU.md`.
+
+## Procedure-level dead code elimination
+
+Reusable assembly routines can be declared with `.proc NAME` / `.endproc`. After
+includes and `.equ` expansion, `svm-asm` keeps only procedures reachable from
+`.entry`, `.keep`, or other live symbolic references. This allows complete standard
+libraries to be included without paying for unused routines. See
+`docs/PROCEDURE_GC_HU.md`.

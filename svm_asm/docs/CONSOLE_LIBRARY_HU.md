@@ -4,7 +4,7 @@ Az `svm_asm/lib/<arch>/console.asm` fájlok mind a kilenc ISA-hoz include-olhat�
 
 ## API
 
-Minden architektúrában ugyanazok a címkék állnak rendelkezésre:
+Minden architektúrában ugyanazok a `.proc` eljárások állnak rendelkezésre:
 
 - `putc` – egy karakter kiírása;
 - `newline` – CR+LF (`13,10`) kiírása;
@@ -23,7 +23,11 @@ Példa Register ISA esetén:
 Fordításkor:
 
 ```sh
-svm-asm -I svm_asm/lib/register register program.asm program.svm
+svm-asm register program.asm program.svm
 ```
 
-Az architektúrákhoz tartozó könyvtárak: `register`, `stack`, `accumulator`, `memreg`, `loadstore`, `regmem`, `memory2memory`, `belt`, `tta`.
+A kiválasztott target `lib/<arch>/` könyvtárát az assembler automatikusan keresi, ezért a standard könyvtárhoz nem szükséges `-I`. Az architektúrákhoz tartozó könyvtárak: `register`, `stack`, `accumulator`, `memreg`, `loadstore`, `regmem`, `memory2memory`, `belt`, `tta`.
+
+## Kódelhagyás
+
+A `console.asm` rutinjai `.proc/.endproc` blokkok. A teljes fájl nyugodtan include-olható: a végső programba csak az élő kódból elérhető `putc`, `newline`, `puts` és tranzitív függőségeik kerülnek.

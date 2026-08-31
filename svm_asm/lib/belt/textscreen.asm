@@ -1,27 +1,37 @@
 ; 40x25 framebuffer text-screen helpers.
 ; text_goto: b1=x,b0=y. text_set_colors: b1=fg,b0=bg. text_putc: b0=char.
 ; Scratch words: 0x00F2 (y), 0x00F4 (x).
-text_goto:
+.proc text_goto
     ST8A 0xFF03,b0
     ST8A 0xFF02,b1
     RET
-text_set_colors:
+.endproc
+
+.proc text_set_colors
     ST8A 0xFF05,b0
     ST8A 0xFF04,b1
     RET
-text_home:
+.endproc
+
+.proc text_home
     LDI 0
     ST8A 0xFF02,b0
     ST8A 0xFF03,b0
     RET
-text_cr:
+.endproc
+
+.proc text_cr
     LDI 0
     ST8A 0xFF02,b0
     RET
-text_putc:
+.endproc
+
+.proc text_putc
     ST8A 0xFF06,b0
     RET
-text_clear:
+.endproc
+
+.proc text_clear
     LDI 0
     ZST16 0xF2,b0
 text_clear_y:
@@ -51,3 +61,4 @@ text_clear_x:
     CMP b1,b0
     JNZ text_clear_y
     JMP text_home
+.endproc

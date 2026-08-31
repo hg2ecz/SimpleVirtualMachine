@@ -21,7 +21,7 @@ Targetek: `register`, `stack`, `accumulator`, `memreg`, `loadstore`, `regmem`, `
 
 `-O1/-O2/-Os` esetén a fordító `main()`-ből induló call graph reachability pass-t futtat. Csak a tranzitívan elérhető függvények maradnak meg. Ez **a statikus memória-layout előtt** történik, ezért a dead függvények gépi kódot és statikus RAM-ot sem foglalnak. Egy `include` tehát forrásláthatóságot ad, de nem kényszeríti az egész könyvtár emittálását.
 
-`-O0` és `svm-c-unopt-only` szándékosan megtart minden függvényt oktatási/referencia összehasonlításhoz.
+`-O0` és `svm-c-unopt-only` a C-szintű kódgenerálásig szándékosan megtart minden függvényt oktatási/referencia összehasonlításhoz. `--emit asm` ezt teljes `.proc` készletként mutatja; bináris készítéskor a kötelező assembler procedure-GC ettől függetlenül eltávolítja az el nem érhető eljárásokat.
 
 ## Include
 
