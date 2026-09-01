@@ -2,6 +2,25 @@ use crate::model::*;
 use std::collections::{HashMap, HashSet};
 
 pub(crate) fn validate(p: &Program) -> Result<(), String> {
+    // These prefixes are part of the compiler-owned C/ASM bridge namespace.
+    // Rejecting them at the C level prevents collisions with generated labels
+    // such as __asm_fast and __cabi_fast_arg.
+    for g in &p.globals {
+        if g.name.starts_with("__asm_") || g.name.starts_with("__cabi_") {
+            return Err(format!(
+                "name '{}' uses a compiler-reserved C/ASM bridge prefix",
+                g.name
+            ));
+        }
+    }
+    for f in &p.functions {
+        if f.name.starts_with("__asm_") || f.name.starts_with("__cabi_") {
+            return Err(format!(
+                "name '{}' uses a compiler-reserved C/ASM bridge prefix",
+                f.name
+            ));
+        }
+    }
     let mut names = HashSet::new();
     for g in &p.globals {
         if !names.insert(g.name.clone()) {
@@ -56,6 +75,9 @@ pub(crate) fn validate(p: &Program) -> Result<(), String> {
     if !funcs.contains("main") {
         return Err("program must define main()".into());
     }
+    if p.functions.iter().any(|f| f.name == "main" && f.extern_asm) {
+        return Err("main() must have a C body; it cannot be declared extern asm".into());
+    }
     validate_semantics(p)?;
     let known: HashSet<String> = p.functions.iter().map(|f| f.name.clone()).collect();
     let mut graph: HashMap<String, Vec<String>> = HashMap::new();
@@ -73,6 +95,22 @@ pub(crate) fn validate(p: &Program) -> Result<(), String> {
     Ok(())
 }
 pub(crate) fn validate_semantics(p: &Program) -> Result<(), String> {
+    for g in &p.globals {
+        if g.name.starts_with("__asm_") || g.name.starts_with("__cabi_") {
+            return Err(format!(
+                "name '{}' uses a compiler-reserved C/ASM bridge prefix",
+                g.name
+            ));
+        }
+    }
+    for f in &p.functions {
+        if f.name.starts_with("__asm_") || f.name.starts_with("__cabi_") {
+            return Err(format!(
+                "name '{}' uses a compiler-reserved C/ASM bridge prefix",
+                f.name
+            ));
+        }
+    }
     let globals: HashMap<String, Ty> = p.globals.iter().map(|g| (g.name.clone(), g.ty)).collect();
     let funcs: HashMap<String, FunctionSig> = p
         .functions

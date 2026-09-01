@@ -78,6 +78,17 @@ pub(crate) fn make_layout(p: &Program, target: Target) -> Result<Layout, String>
                 },
             );
         }
+        if f.extern_asm && f.ret != Ty::Void {
+            let ad = alloc_static_n(&mut next, f.ret, 1, memreg_hot_scratch)?;
+            locals.insert(
+                (f.name.clone(), String::from("#asm_return")),
+                VarInfo {
+                    ty: f.ret,
+                    addr: ad,
+                    len: 1,
+                },
+            );
+        }
         alloc_stmt(&f.name, &f.body, &mut next, &mut locals, memreg_hot_scratch)?;
     }
 

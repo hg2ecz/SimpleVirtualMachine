@@ -387,3 +387,14 @@ The `tta` / `tta16` target emits transport-triggered code. ALU operations are ex
 Portable general-purpose algorithms are maintained as C source under `svm_c/lib/`. The `stdlib.sc` umbrella includes memory, string, bit manipulation, CRC/checksum, conversion, ring-buffer, integer/Q15/trigonometry, software-random and console helpers. See `STANDARD_LIBRARY_EN.md` for the API overview.
 
 Address-based APIs take a `u16` address; use `&object` to obtain the address of an array or object. The compiler built-in `puts()` still accepts only string literals; use `putstr(address)` from `console.sc` for run-time generated zero-terminated buffers.
+
+## External assembly function
+
+```c
+asm_include "fast.asm";
+extern asm u16 fast(u16 x);
+```
+
+The per-target implementation is named `__asm_fast`; bridge parameters/results are exposed as `__cabi_fast_x` and `__cabi_fast_return`. See `ASM_INTEROP_EN.md`.
+
+Note: `__asm_` and `__cabi_` are compiler-reserved prefixes and may not be used for user C declarations.

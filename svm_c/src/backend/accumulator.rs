@@ -83,6 +83,32 @@ pub fn emit(p: &Program, l: &Layout, opt: OptLevel) -> Result<String, String> {
     e.comment(&format!("Optimization: {:?}", opt));
     e.comment("Readable assembly: A is the accumulator, X is index/secondary operand.");
     e.blank();
+    for inc in &p.asm_includes {
+        e.line(&format!(".include \"{}\"", inc));
+    }
+    for f in p.functions.iter().filter(|f| f.extern_asm) {
+        for a in &f.params {
+            let v = l.var(&f.name, &a.name).ok_or_else(|| {
+                format!(
+                    "missing extern-asm parameter layout for {}.{}",
+                    f.name, a.name
+                )
+            })?;
+            e.line(&format!(
+                ".equ __cabi_{}_{} , 0x{:04X}",
+                f.name, a.name, v.addr
+            ));
+        }
+        if f.ret != Ty::Void {
+            let v = l
+                .var(&f.name, "#asm_return")
+                .ok_or_else(|| format!("missing extern-asm return layout for {}", f.name))?;
+            e.line(&format!(".equ __cabi_{}_return , 0x{:04X}", f.name, v.addr));
+        }
+    }
+    if !p.asm_includes.is_empty() || p.functions.iter().any(|f| f.extern_asm) {
+        e.blank();
+    }
     e.line(".load 0x0100");
     e.line(".entry __start");
     e.blank();
@@ -152,6 +178,20 @@ impl<'a> E<'a> {
                 "parameter {} at 0x{:04X} (caller stores it)",
                 a.name, v.addr
             ));
+        }
+        if f.extern_asm {
+            self.line(&format!("CALL __asm_{}", f.name));
+            if f.ret != Ty::Void {
+                let rv = self
+                    .layout
+                    .var(&f.name, "#asm_return")
+                    .cloned()
+                    .ok_or_else(|| format!("missing extern-asm return slot for {}", f.name))?;
+                self.load(&rv);
+            }
+            self.line("RET");
+            self.line(".endproc");
+            return Ok(());
         }
         self.stmt(&f.body)?;
         if f.ret == Ty::Void {

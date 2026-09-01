@@ -17,3 +17,14 @@ Saját könyvtárak behúzásához a fordító a `include "fajl.sc";` formát t�
 ## Széles numerikus objektumok
 
 Az `i32/u32` 4 bájtos, az `i64/u64` 8 bájtos tárolási objektum. A 32/64 bites értékek könyvtári, cím-alapú soft-aritmetikával használhatók; a `&objektum` címképzés támogatott. `int` = `i16`, `long` = `i32`. Az `i64/u64` publikus szerepe a 32×32 bites teljes szorzat eredményének tárolása. Részletek: `NUMERIC_TYPES_HU.md`.
+
+## Assembly interoperabilitás
+
+Target-specifikus assembly implementáció C-ből az `asm_include "modul.asm";` és `extern asm` deklaráció párossal használható:
+
+```c
+asm_include "fast.asm";
+extern asm u16 fast(u16 x);
+```
+
+A C forrás targetfüggetlen marad. A fordító a kiválasztott architektúrához tartozó `asm/<target>/fast.asm` modult keresi, majd a beépített `svm_asm/lib/<target>/` könyvtárat is használhatja. A stabil memória-bridge és a fenntartott `__asm_` / `__cabi_` szimbólumok részletes leírása az `ASM_INTEROP_HU.md` fájlban található.

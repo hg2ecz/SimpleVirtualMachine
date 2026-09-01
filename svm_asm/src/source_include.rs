@@ -8,6 +8,97 @@ pub enum IncludeStyle {
     C,
 }
 
+/// Expand includes in an in-memory source string. `base_dir` is used for
+/// relative includes emitted by another compiler (notably SVM-C).
+pub fn expand_source_text(
+    source: &str,
+    base_dir: &Path,
+    include_dirs: &[PathBuf],
+    style: IncludeStyle,
+) -> Result<String, String> {
+    let mut seen = HashSet::new();
+    let mut stack = Vec::new();
+    expand_text(
+        source,
+        base_dir,
+        include_dirs,
+        style,
+        &mut seen,
+        &mut stack,
+        0,
+        "<generated>",
+    )
+}
+
+fn expand_text(
+    source: &str,
+    base_dir: &Path,
+    include_dirs: &[PathBuf],
+    style: IncludeStyle,
+    seen: &mut HashSet<PathBuf>,
+    stack: &mut Vec<PathBuf>,
+    depth: usize,
+    display_name: &str,
+) -> Result<String, String> {
+    const MAX_INCLUDE_DEPTH: usize = 64;
+    if depth > MAX_INCLUDE_DEPTH {
+        return Err(format!("include nesting exceeds {MAX_INCLUDE_DEPTH} files"));
+    }
+    let mut output = String::new();
+    for (line_index, raw_line) in source.lines().enumerate() {
+        match parse_include_line(raw_line, style) {
+            Ok(Some(name)) => {
+                let included = resolve_include(&name, base_dir, include_dirs).ok_or_else(|| {
+                    format!(
+                        "{}:{}: include file '{}' not found",
+                        display_name,
+                        line_index + 1,
+                        name
+                    )
+                })?;
+                let canonical = fs::canonicalize(&included).map_err(|e| {
+                    format!("cannot open included file '{}': {e}", included.display())
+                })?;
+                if let Some(pos) = stack.iter().position(|p| p == &canonical) {
+                    let mut cycle = stack[pos..]
+                        .iter()
+                        .map(|p| p.display().to_string())
+                        .collect::<Vec<_>>();
+                    cycle.push(canonical.display().to_string());
+                    return Err(format!("cyclic include: {}", cycle.join(" -> ")));
+                }
+                if seen.insert(canonical.clone()) {
+                    stack.push(canonical.clone());
+                    let text = fs::read_to_string(&canonical).map_err(|e| {
+                        format!("cannot read source '{}': {e}", canonical.display())
+                    })?;
+                    let child_base = canonical.parent().unwrap_or_else(|| Path::new("."));
+                    output.push_str(&expand_text(
+                        &text,
+                        child_base,
+                        include_dirs,
+                        style,
+                        seen,
+                        stack,
+                        depth + 1,
+                        &canonical.display().to_string(),
+                    )?);
+                    stack.pop();
+                    if !output.ends_with('\n') {
+                        output.push('\n');
+                    }
+                }
+            }
+            Ok(None) => {
+                output.push_str(raw_line);
+                output.push('\n');
+            }
+            Err(message) => return Err(format!("{}:{}: {message}", display_name, line_index + 1)),
+        }
+    }
+    Ok(output)
+}
+
 pub fn expand_source_file(
     input: &Path,
     include_dirs: &[PathBuf],
@@ -170,6 +261,19 @@ fn parse_include_line(line: &str, style: IncludeStyle) -> Result<Option<String>,
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn expands_generated_text_from_include_dir() {
+        let root = std::env::temp_dir().join(format!("svm_include_test_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::write(root.join("helper.asm"), ".proc helper\n RET\n.endproc\n").unwrap();
+        let src = ".include \"helper.asm\"\n.entry helper\n";
+        let out = expand_source_text(src, &root, &[root.clone()], IncludeStyle::Assembly).unwrap();
+        assert!(out.contains(".proc helper"));
+        assert!(out.contains(".entry helper"));
+        let _ = std::fs::remove_dir_all(&root);
+    }
 
     #[test]
     fn parses_assembly_include() {

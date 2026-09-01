@@ -12,6 +12,7 @@ English/Hungarian document pairs must describe the same implemented language and
 - [`OPTIMIZATION_HU.md`](OPTIMIZATION_HU.md) - optimization levels, unused-function elimination, target-aware lowering and `svm-c-unopt-only`.
 - [`OPTIMIZATION.md`](OPTIMIZATION.md) - English optimization reference, semantically paired with `OPTIMIZATION_HU.md`.
 - [`SOURCE_INCLUDES_HU.md`](SOURCE_INCLUDES_HU.md) - source include mechanism.
+- [`ASM_INTEROP_HU.md`](ASM_INTEROP_HU.md) / [`ASM_INTEROP_EN.md`](ASM_INTEROP_EN.md) - target-neutral C declarations calling target-specific assembly modules.
 - [`NUMERIC_TYPES_HU.md`](NUMERIC_TYPES_HU.md) - scalar, wide integer, Q15 and soft-float types.
 
 ## Libraries and examples

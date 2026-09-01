@@ -47,3 +47,7 @@ Az include csak forrásszintű láthatóságot ad. `-O1`, `-O2` és `-Os` alatt 
 - nincs külön linkelési fázis;
 - minden behúzott definíció ugyanahhoz az egy fordítási egységhez tartozik;
 - azonos nevű globális vagy függvénydefiníció fordítási hiba.
+
+## Assembly modulok C forrásból
+
+Target-specifikus assembly modulhoz az `asm_include "modul.asm";` és `extern asm` deklaráció használható. A többarchitektúrás mappakonvenciót és a stabil bridge ABI-t az `ASM_INTEROP_HU.md` részletezi.

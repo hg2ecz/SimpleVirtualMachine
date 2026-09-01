@@ -60,6 +60,8 @@ impl Ty {
 pub struct Program {
     pub globals: Vec<VarDecl>,
     pub functions: Vec<Function>,
+    /// Logical assembly modules requested by `asm_include "...";`.
+    pub asm_includes: Vec<String>,
 }
 #[derive(Debug, Clone)]
 pub struct VarDecl {
@@ -75,6 +77,9 @@ pub struct Function {
     pub name: String,
     pub params: Vec<VarDecl>,
     pub body: Stmt,
+    /// True for `extern asm` declarations. Such functions participate in the
+    /// normal C ABI/layout but their body is supplied by an assembly include.
+    pub extern_asm: bool,
 }
 #[derive(Debug, Clone)]
 pub enum Stmt {

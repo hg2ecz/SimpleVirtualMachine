@@ -231,7 +231,31 @@ impl Parser {
     fn parse_program(&mut self) -> Result<Program, String> {
         let mut globals = vec![];
         let mut functions = vec![];
+        let mut asm_includes = vec![];
         while !matches!(self.peek(), Tok::Eof) {
+            // Target-neutral assembly module request. The C driver resolves this
+            // against asm/<target>/ and the selected target's built-in ASM lib.
+            if matches!(self.peek(), Tok::Id(s) if s == "asm_include") {
+                self.bump();
+                let name = match self.bump() {
+                    Tok::Str(s) => s,
+                    x => return Err(format!("asm_include expects a quoted file name, got {x:?}")),
+                };
+                self.need_sym(";")?;
+                if !asm_includes.contains(&name) {
+                    asm_includes.push(name);
+                }
+                continue;
+            }
+            let extern_asm = if matches!(self.peek(), Tok::Id(s) if s == "extern") {
+                self.bump();
+                match self.bump() {
+                    Tok::Id(s) if s == "asm" => true,
+                    x => return Err(format!("expected 'asm' after 'extern', got {x:?}")),
+                }
+            } else {
+                false
+            };
             let ty = self.ty()?;
             let name = self.id()?;
             if self.sym("(") {
@@ -257,14 +281,23 @@ impl Parser {
                         self.need_sym(",")?
                     }
                 }
-                let body = self.stmt()?;
+                let body = if extern_asm {
+                    self.need_sym(";")?;
+                    Stmt::Empty
+                } else {
+                    self.stmt()?
+                };
                 functions.push(Function {
                     ret: ty,
                     name,
                     params,
                     body,
+                    extern_asm,
                 })
             } else {
+                if extern_asm {
+                    return Err("extern asm must declare a function".into());
+                }
                 if ty == Ty::Void {
                     return Err("void global is invalid".into());
                 }
@@ -288,7 +321,11 @@ impl Parser {
                 })
             }
         }
-        Ok(Program { globals, functions })
+        Ok(Program {
+            globals,
+            functions,
+            asm_includes,
+        })
     }
     fn stmt(&mut self) -> Result<Stmt, String> {
         if self.sym("{") {
@@ -687,14 +724,14 @@ mod optimization_tests {
     fn optimized_build_drops_unreachable_functions_transitively() {
         let src = "u16 dead2(){ u16 pad[32]; return 3; } u16 dead1(){ return dead2(); } u16 leaf(){ return 7; } u16 helper(){ return leaf(); } u16 main(){ return helper(); }";
         let o0 = reg(src, OptLevel::O0);
-        assert!(o0.contains("dead1:"));
-        assert!(o0.contains("dead2:"));
+        assert!(o0.contains(".proc dead1"));
+        assert!(o0.contains(".proc dead2"));
         for level in [OptLevel::O1, OptLevel::O2, OptLevel::Os] {
             let asm = reg(src, level);
-            assert!(!asm.contains("dead1:"));
-            assert!(!asm.contains("dead2:"));
-            assert!(asm.contains("helper:"));
-            assert!(asm.contains("leaf:"));
+            assert!(!asm.contains(".proc dead1"));
+            assert!(!asm.contains(".proc dead2"));
+            assert!(asm.contains(".proc helper"));
+            assert!(asm.contains(".proc leaf"));
         }
     }
 
@@ -784,6 +821,82 @@ mod semantic_review_tests {
         let prefix = &asm[..call];
         assert!(prefix.matches("PUSH R0").count() >= 5);
         assert!(prefix.matches("POP R0").count() >= 5);
+    }
+
+    #[test]
+    fn extern_asm_emits_bridge_on_all_targets() {
+        let src = r#"
+            asm_include "interop_demo.asm";
+            extern asm u16 asm_inc(u16 x);
+            u16 main(){ return asm_inc(41); }
+        "#;
+        for target in [
+            Target::Register,
+            Target::Stack,
+            Target::Accumulator,
+            Target::MemReg,
+            Target::LoadStore,
+            Target::RegMem,
+            Target::Memory2Memory,
+            Target::Belt,
+            Target::Tta,
+        ] {
+            let asm = compile_source(src, target, OptLevel::O1).expect("extern asm compile");
+            assert!(
+                asm.contains(".include \"interop_demo.asm\""),
+                "target {target:?}"
+            );
+            assert!(asm.contains("__cabi_asm_inc_x"), "target {target:?}");
+            assert!(asm.contains("__cabi_asm_inc_return"), "target {target:?}");
+            assert!(asm.contains(".proc asm_inc"), "target {target:?}");
+            assert!(asm.contains("__asm_asm_inc"), "target {target:?}");
+        }
+    }
+
+    #[test]
+    fn extern_asm_declaration_is_kept_when_reachable_and_dropped_when_dead() {
+        let live = r#"extern asm u16 fast(u16 x); u16 main(){ return fast(7); }"#;
+        let dead = r#"extern asm u16 fast(u16 x); u16 main(){ return 7; }"#;
+        let live_asm = compile_source(live, Target::Register, OptLevel::O1).unwrap();
+        let dead_asm = compile_source(dead, Target::Register, OptLevel::O1).unwrap();
+        assert!(live_asm.contains(".proc fast"));
+        assert!(live_asm.contains("CALL __asm_fast"));
+        assert!(!dead_asm.contains(".proc fast"));
+        assert!(!dead_asm.contains("__cabi_fast_x"));
+    }
+
+    #[test]
+    fn extern_asm_requires_function_form_and_main_must_be_c() {
+        assert!(
+            compile_source(
+                "extern asm u16 x; u16 main(){return 0;}",
+                Target::Register,
+                OptLevel::O0
+            )
+            .is_err()
+        );
+        assert!(compile_source("extern asm u16 main();", Target::Register, OptLevel::O0).is_err());
+    }
+
+    #[test]
+    fn extern_asm_supports_void_and_multiple_parameters() {
+        let src = r#"extern asm void sink(u8 a,u16 b,i16 c,u16 d,u16 e); u16 main(){ sink(1,2,3,4,5); return 0; }"#;
+        let asm = compile_source(src, Target::Register, OptLevel::O1).unwrap();
+        assert!(asm.contains("__cabi_sink_a"));
+        assert!(asm.contains("__cabi_sink_e"));
+        assert!(!asm.contains("__cabi_sink_return"));
+        assert!(asm.contains("CALL __asm_sink"));
+    }
+
+    #[test]
+    fn cabi_internal_prefixes_are_reserved() {
+        for src in [
+            "u16 __asm_bad(){return 0;} u16 main(){return 0;}",
+            "u16 __cabi_bad; u16 main(){return 0;}",
+        ] {
+            let err = compile_source(src, Target::Register, OptLevel::O1).unwrap_err();
+            assert!(err.contains("reserved C/ASM bridge prefix"));
+        }
     }
 }
 

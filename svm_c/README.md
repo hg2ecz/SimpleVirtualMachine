@@ -54,3 +54,7 @@ Character-screen helpers for the 40x25 framebuffer text layer are in `svm_c/lib/
 ## C-first portable library
 
 Portable algorithms are maintained primarily under `svm_c/lib/` as include-able SVM-C source. `stdlib.sc` collects the common memory, string, bit, CRC, conversion, ring-buffer, arithmetic/random and console helpers. Hand-written assembly is kept for low-level target-specific helpers and demonstrations rather than duplicating each portable algorithm nine times. See `docs/STANDARD_LIBRARY_HU.md` / `STANDARD_LIBRARY_EN.md`.
+
+## Calling target-specific assembly from C
+
+SVM-C supports target-neutral declarations such as `extern asm u16 fast(u16 x);` together with `asm_include "fast.asm";`. Put implementations under `asm/<target>/fast.asm`; the compiler emits a stable memory bridge and the final assembler procedure-GC links only reachable procedures. See `docs/ASM_INTEROP_HU.md` / `docs/ASM_INTEROP_EN.md`.

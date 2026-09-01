@@ -17,3 +17,14 @@ Reusable source libraries can be included with `include "file.sc";`. This is not
 ## Wide numeric objects
 
 `i32/u32` are 4-byte and `i64/u64` are 8-byte storage objects. Wide arithmetic is library-based and address-oriented; `&object` address formation is supported. `int` aliases `i16`, and `long` aliases `i32`. Public `i64/u64` use is intentionally limited to holding full 32×32 multiplication results.
+
+## Assembly interoperability
+
+A target-specific assembly implementation can be called from C with an `asm_include "module.asm";` plus an `extern asm` declaration:
+
+```c
+asm_include "fast.asm";
+extern asm u16 fast(u16 x);
+```
+
+The C source remains target-neutral. The compiler resolves the module from `asm/<target>/fast.asm` for the selected architecture and may also use the built-in `svm_asm/lib/<target>/` directory. See `ASM_INTEROP_EN.md` for the stable memory bridge and the reserved `__asm_` / `__cabi_` symbols.

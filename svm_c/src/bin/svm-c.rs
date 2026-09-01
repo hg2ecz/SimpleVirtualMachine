@@ -1,7 +1,8 @@
 use std::{env, fs, path::PathBuf};
 
 use svm_asm::procedure_gc::{ProcedureSyntax, eliminate_unused_procedures};
-use svm_asm::source_include::{IncludeStyle, expand_source_file};
+use svm_asm::source_include::{IncludeStyle, expand_source_file, expand_source_text};
+use svm_asm::source_preprocess::expand_equ;
 
 use svm_c::common::model::{OptLevel, Target};
 use svm_c::optimized::pipeline::compile_source;
@@ -24,6 +25,45 @@ fn ensure_c_program_does_not_overlap_upper_data(
 
 fn usage() -> &'static str {
     "usage: svm-c --target register|stack|accumulator|memreg|loadstore|regmem|memory2memory|belt|tta [-O0|-O1|-O2|-Os] [-I dir|-Idir] [--emit asm|bin] source.sc [output]"
+}
+
+fn canonical_target_name(target: Target) -> &'static str {
+    match target {
+        Target::Register => "register",
+        Target::Stack => "stack",
+        Target::Accumulator => "accumulator",
+        Target::MemReg => "memreg",
+        Target::LoadStore => "loadstore",
+        Target::RegMem => "regmem",
+        Target::Memory2Memory => "memory2memory",
+        Target::Belt => "belt",
+        Target::Tta => "tta",
+    }
+}
+
+fn assembly_include_dirs(
+    input: &std::path::Path,
+    target: Target,
+    user: &[PathBuf],
+) -> Vec<PathBuf> {
+    let tn = canonical_target_name(target);
+    let mut out = Vec::new();
+    let base = input.parent().unwrap_or_else(|| std::path::Path::new("."));
+    out.push(base.join("asm").join(tn));
+    // A -I directory may itself be target-specific, or it may contain one
+    // subdirectory per target. Prefer the target-specific child.
+    for d in user {
+        out.push(d.join(tn));
+        out.push(d.clone());
+    }
+    let builtin = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap_or_else(|| std::path::Path::new("."))
+        .join("svm_asm")
+        .join("lib")
+        .join(tn);
+    out.push(builtin);
+    out
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -104,6 +144,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
 
+    let asm_dirs = assembly_include_dirs(&input, target, &include_dirs);
+    let asm_base = input.parent().unwrap_or_else(|| std::path::Path::new("."));
+    let assembly = expand_source_text(&assembly, asm_base, &asm_dirs, IncludeStyle::Assembly)
+        .map_err(|e| format!("assembly include error: {e}"))?;
+    let assembly = expand_equ(&assembly).map_err(|e| format!("assembly constant error: {e}"))?;
     let proc_syntax = match target {
         Target::Stack => ProcedureSyntax::StackLabels,
         _ => ProcedureSyntax::Labels,

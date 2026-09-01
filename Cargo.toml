@@ -1,5 +1,5 @@
 [workspace]
-members = ["svm_asm", "svm_rt", "svm_c"]
+members = ["svm_asm", "svm_rt", "svm_c", "svm_clite"]
 resolver = "2"
 
 [profile.release]

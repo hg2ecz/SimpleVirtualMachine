@@ -390,3 +390,14 @@ A `tta` / `tta16` target transport-triggered kódot generál. Az ALU-műveletek 
 Az általános hordozható algoritmusok a `svm_c/lib/` alatt C forrásként találhatók. A `stdlib.sc` umbrella include a memória-, string-, bit-, CRC/checksum-, konverziós, ring-buffer-, integer/Q15/trig-, random- és konzolsegédeket gyűjti össze. Részletes API: `STANDARD_LIBRARY_HU.md`.
 
 A cím-alapú API-k `u16` címet fogadnak; tömb vagy objektum címe `&objektum` alakban képezhető. A compiler built-in `puts()` továbbra is csak string literált fogad; dinamikus memóriastringhez a `console.sc` `putstr(address)` rutinja használható.
+
+## Külső assembly függvény
+
+```c
+asm_include "fast.asm";
+extern asm u16 fast(u16 x);
+```
+
+Az implementáció targetenként `__asm_fast` néven készül. Paraméterei a `__cabi_fast_x`, eredménye a `__cabi_fast_return` assembly szimbólumon érhetők el. Lásd `ASM_INTEROP_HU.md`.
+
+Megjegyzés: a `__asm_` és `__cabi_` prefixek fordító által fenntartott nevek; C deklarációban nem használhatók felhasználói névként.
