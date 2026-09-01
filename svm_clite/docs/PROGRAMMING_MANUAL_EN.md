@@ -1,6 +1,7 @@
 # SVM C-Lite Programmer's Manual
 
 **Version:** 1.0  
+**Status:** Primary normative programmer documentation  
 **Language goal:** structured, architecture-independent assembly  
 **Targets:** Register, Stack, Accumulator, MemReg, Load/Store, Register-Memory, Memory-to-Memory, Belt, TTA
 

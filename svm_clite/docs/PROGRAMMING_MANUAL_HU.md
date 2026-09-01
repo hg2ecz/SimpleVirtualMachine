@@ -1,6 +1,7 @@
 # SVM C-Lite programozói kézikönyv
 
 **Verzió:** 1.0  
+**Státusz:** Teljes magyar társ-dokumentáció; a normatív elsődleges változat a `PROGRAMMING_MANUAL_EN.md`  
 **Nyelvi cél:** strukturált, architektúrafüggetlen assembly  
 **Célarchitektúrák:** Register, Stack, Accumulator, MemReg, Load/Store, Register-Memory, Memory-to-Memory, Belt, TTA
 

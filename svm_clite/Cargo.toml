@@ -1,6 +1,6 @@
 [package]
 name = "svm-clite"
-version = "1.0.0-rc30"
+version = "1.0.0"
 edition = "2024"
 
 [dependencies]

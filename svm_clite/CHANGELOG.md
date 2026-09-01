@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.0 - stable release
+
+- released the deliberately small structured, architecture-independent assembly language after the rc30 release audit;
+- kept the language core and CLIR 0.1 frozen with no new feature added for the release;
+- kept all nine direct CLIR-to-ISA backends and the external `svm-asm` boundary;
+- confirmed the release gates supplied by the project test runs: compiler tests pass and all 81 compiler-to-assembler integration cases pass;
+- made English the primary normative documentation language for C-Lite, with complete Hungarian companion documentation;
+- no optimizer, SSA, general register allocator, scheduler, embedded assembler, SVM-C dependency, or shared generic CPU backend was added.
+
 ## 1.0.0-rc30 - release audit cleanup
 
 - refreshed programmer-manual version labels to the stable 1.0 documentation line;
