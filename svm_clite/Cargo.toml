@@ -1,0 +1,10 @@
+[package]
+name = "svm-clite"
+version = "1.0.0-rc30"
+edition = "2024"
+
+[dependencies]
+
+[[bin]]
+name = "svm-clite"
+path = "src/main.rs"
